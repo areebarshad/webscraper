@@ -1,0 +1,35 @@
+# Default configuration. Override any value with env vars using the SCRAPER_ prefix
+# and __ for nesting, e.g. SCRAPER_FETCH__TIMEOUT=30, SCRAPER_VAULT_PATH=/path/to/vault.
+
+vault_path: "vault"
+contacts_dir: "Contacts"
+articles_dir: "Articles"
+
+# Overwrite existing notes, or write a unique " (2)" suffixed file on collision.
+overwrite_existing: false
+
+fetch:
+  timeout: 20.0            # total request timeout (seconds)
+  connect_timeout: 10.0
+  max_redirects: 5
+  http2: true
+  respect_robots: true
+  rotate_user_agent: true  # false = sticky per-session UA
+
+throttle:
+  rate: 1.0               # tokens (requests) per second, per host
+  capacity: 3             # burst capacity
+
+retry:
+  max_attempts: 4
+  base_delay: 0.5         # seconds
+  max_delay: 30.0
+
+dynamic:
+  block_resources: ["image", "media", "font"]
+  headless: true
+
+llm:
+  enabled: false          # opt-in; guards Anthropic API cost
+  model: "claude-sonnet-5"
+  max_tokens: 2048
