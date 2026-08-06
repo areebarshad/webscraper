@@ -32,21 +32,30 @@ def scrape(
     dynamic: bool = typer.Option(
         False, "--dynamic", help="Force the Playwright fetcher (Phase 4)."
     ),
+    write: bool = typer.Option(
+        True, "--write/--no-write", help="Write the note to the vault, or preview only."
+    ),
 ) -> None:
-    """Fetch, parse, and validate a single URL. (Vault export lands in Phase 3.)"""
+    """Fetch, parse, validate, and write a single URL into the Obsidian vault."""
     setup_logging()
+    pipeline = Pipeline()
     try:
-        record = asyncio.run(Pipeline().run(url, task, force_dynamic=dynamic))
+        if write:
+            path = asyncio.run(pipeline.scrape_to_vault(url, task, force_dynamic=dynamic))
+            typer.secho(f"Wrote {path}", fg=typer.colors.GREEN)
+        else:
+            record = asyncio.run(pipeline.run(url, task, force_dynamic=dynamic))
+            typer.secho(f"Parsed {record.note_kind}: {record.title()}", fg=typer.colors.GREEN)
+            typer.echo("--- note preview ---")
+            from webscraper_core.exporters.obsidian import render_note
+
+            typer.echo(render_note(record))
     except ScrapeError as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from exc
     except (KeyError, NotImplementedError) as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2) from exc
-
-    typer.secho(f"Parsed {record.note_kind}: {record.title()}", fg=typer.colors.GREEN)
-    typer.echo("--- body preview ---")
-    typer.echo(record.body())
 
 
 if __name__ == "__main__":

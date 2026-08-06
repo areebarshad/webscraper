@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 def _utcnow() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(UTC).replace(microsecond=0)
 
 
 class ScrapeRecord(BaseModel):

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 from webscraper_core.config import Settings, load_settings
+from webscraper_core.exporters.obsidian import ObsidianExporter
 from webscraper_core.fetchers.router import select_fetcher
 from webscraper_core.parsers.registry import get_parser
 from webscraper_core.schemas.base import ScrapeRecord
@@ -20,6 +22,14 @@ class ScrapeError(RuntimeError):
 class Pipeline:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or load_settings()
+        self.exporter = ObsidianExporter(self.settings)
+
+    async def scrape_to_vault(
+        self, url: str, task: str, *, force_dynamic: bool = False
+    ) -> Path:
+        """Full path: scrape then write the note into the vault. Returns the file path."""
+        record = await self.run(url, task, force_dynamic=force_dynamic)
+        return self.exporter.export(record)
 
     async def run(self, url: str, task: str, *, force_dynamic: bool = False) -> ScrapeRecord:
         parser = get_parser(task)  # validates task early
