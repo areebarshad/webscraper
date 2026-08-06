@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     contacts_dir: str = "Contacts"
     articles_dir: str = "Articles"
     profiles_dir: str = "Profiles"
+    research_dir: str = "Research"
     overwrite_existing: bool = False
 
     fetch: FetchSettings = Field(default_factory=FetchSettings)

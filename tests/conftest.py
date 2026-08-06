@@ -34,3 +34,8 @@ def empty_result() -> FetchResult:
 @pytest.fixture
 def profile_result() -> FetchResult:
     return load_fixture("profile.html", "https://devhub.io/janedoe")
+
+
+@pytest.fixture
+def research_result() -> FetchResult:
+    return load_fixture("research.html", "https://example.edu/~turing")

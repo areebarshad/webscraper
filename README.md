@@ -1,64 +1,175 @@
-# WebScraper → Obsidian
+# WebScraper → Obsidian 🕸️📓
 
-Modular, async Python web scraper that extracts unstructured web data (contacts,
-news articles, public profiles) and writes clean Markdown — with YAML
-frontmatter, tags, and `[[wikilinks]]` — straight into an Obsidian vault.
+**Turn any web page into a clean, organized note in your Obsidian vault — in one command.**
 
-## Architecture
+Point it at a news article, a company team page, or a professor's faculty
+profile, and it pulls out what matters, tidies it into Markdown with proper tags
+and links, and files it in the right folder of your vault. No copy‑paste, no
+messy formatting, no dead ends when a site is built with heavy JavaScript.
 
-Tiered fetch/parse so cheap paths run first and expensive ones run only on
-fallback:
+It's open source, runs entirely on your machine, and is friendly to the sites it
+visits.
 
-```
-URL(+task)
-  -> fetcher router (httpx static  ->  Playwright dynamic on demand)
-  -> parser (selectolax / bs4 / trafilatura, task-selected)
-       -> llm_fallback (Claude structured output) when rules fail
-  -> Pydantic validation
-  -> Obsidian exporter (frontmatter + body + wikilinks, sanitized filename)
-  -> vault/Articles|Contacts/<Title>.md
-```
+---
 
-See `src/webscraper_core/` for the package and the phased plan for details.
+## Why you'll like it
 
-## Setup
+- **📥 Straight into Obsidian.** Every result is a real `.md` note with YAML
+  frontmatter, tags, and `[[wikilinks]]` — it shows up in your graph immediately.
+- **🗂️ Sorts itself.** Articles go in `Articles/`, people in `Contacts/`,
+  profiles in `Profiles/`, and research in `Research/`. You don't organize
+  anything.
+- **👤 Knows people.** Scrape a professor once and get **two** linked notes: their
+  contact details *and* a list of their publications, each with a link back to
+  where it was found.
+- **🧠 Smart fallback.** When a page is messy or unusual, it can call in Claude
+  (Anthropic's AI) to read the page and extract clean, structured data — but only
+  if you turn it on.
+- **🌐 Handles modern sites.** Static pages are fetched fast; JavaScript‑heavy
+  pages are rendered in a real browser automatically when needed.
+- **🤝 A polite guest.** Rotates browser identities, spaces out requests per site,
+  and retries gently — so it behaves like a considerate visitor, not a hammer.
+- **🔒 Yours, locally.** Your notes stay in your vault on your computer. Nothing is
+  uploaded anywhere unless you explicitly enable the AI fallback.
 
-Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+---
+
+## Quick start
+
+You'll need **Python 3.11+** and [uv](https://docs.astral.sh/uv/) (a fast Python
+package manager).
 
 ```bash
-uv sync --extra dev
-cp .env.example .env    # add ANTHROPIC_API_KEY if using the LLM fallback
+uv sync --extra dev            # install everything
 ```
 
-For dynamic (JS-rendered) fetching with `--dynamic`, install the browser extra:
+Then scrape something:
+
+```bash
+# Save a news article as a note
+uv run scraper scrape "https://example.com/some-article" --task article
+
+# Grab someone's contact details
+uv run scraper scrape "https://example.com/team/jane" --task contact
+
+# Peek at the note first without saving it
+uv run scraper scrape "https://example.com/some-article" --task article --no-write
+```
+
+Your notes appear under the `vault/` folder, ready to open in Obsidian. Want them
+somewhere else? Add `--vault /path/to/YourVault` (or point `vault/` at your real
+vault).
+
+---
+
+## The people workflow ✨
+
+This is the standout feature. Say you're researching **Professor X**:
+
+```bash
+uv run scraper person "https://university.edu/faculty/professor-x"
+```
+
+You get two notes, automatically linked together:
+
+- **`Contacts/Professor X.md`** — email, department/company, phone, social links
+- **`Research/Professor X - Research.md`** — every publication it can find, each
+  with a link to its source
+
+Open either one in Obsidian and the `[[Professor X]]` link ties them together in
+your graph. Build a research library one person at a time.
+
+---
+
+## Scrape a whole list at once
+
+Have a page full of links, or a file of URLs? Do them all in one go:
+
+```bash
+# Several URLs
+uv run scraper batch "https://a.com" "https://b.com" --task article
+
+# Or from a file (one URL per line)
+uv run scraper batch --file urls.txt --task contact
+```
+
+It runs them in parallel (politely), writes a note for each success, and tells
+you which ones didn't pan out — one bad link never stops the rest.
+
+See everything it can do:
+
+```bash
+uv run scraper tasks       # list the scrape types: article, contact, profile, research
+uv run scraper --help      # full command reference
+```
+
+---
+
+## Turning on the AI fallback (optional)
+
+Most pages are handled by fast, built‑in rules. For the occasional page that's
+too irregular for rules, you can let Claude read it and extract the data for you.
+It's **off by default** — enable it only when you want it:
+
+```bash
+cp .env.example .env         # then paste your ANTHROPIC_API_KEY into .env
+SCRAPER_LLM__ENABLED=true uv run scraper person "https://university.edu/faculty/professor-x"
+```
+
+When enabled, the AI only steps in *after* the free built‑in rules come up empty,
+so you're never paying for pages that scrape cleanly on their own.
+
+---
+
+## Handling JavaScript‑heavy sites
+
+Some sites render their content in the browser with JavaScript. If a normal fetch
+comes back empty, the scraper can render the page in a real headless browser and
+try again. Set that up once:
 
 ```bash
 uv sync --extra dev --extra dynamic
 uv run playwright install chromium
 ```
 
-## Usage
+Then it just works — the scraper escalates to the browser on its own, or you can
+force it with `--dynamic`.
+
+---
+
+## Configuration
+
+Sensible defaults live in `config.yaml` — folder names, politeness (request
+rate), timeouts, and the AI model. Override any of it without editing files using
+`SCRAPER_`‑prefixed environment variables, for example:
 
 ```bash
-uv run scraper version
-uv run scraper scrape "https://example.com/article" --task article
-uv run scraper scrape "https://example.com/team" --task contact
+SCRAPER_VAULT_PATH=~/Notes/Vault      # where notes are written
+SCRAPER_THROTTLE__RATE=0.5            # go gentler: 1 request every 2 seconds
+SCRAPER_LLM__ENABLED=true             # turn on the AI fallback
 ```
 
-Configuration lives in `config.yaml`; override any value with `SCRAPER_`-prefixed
-environment variables (`__` for nesting, e.g. `SCRAPER_FETCH__TIMEOUT=30`).
+---
 
-## Development
+## Please scrape responsibly
+
+This tool is for gathering information you're allowed to access. Respect each
+site's terms of service and `robots.txt`, don't hammer servers, and don't collect
+personal data you have no right to. The built‑in rate limiting is there to help
+you be a good citizen — please keep it that way.
+
+---
+
+## Contributing
+
+Adding a new kind of note is a small, well‑defined job — a schema, a parser, and
+a folder. See **CLAUDE.md** for the project map and the exact extension pattern,
+and run the checks before opening a pull request:
 
 ```bash
-uv run pytest
-uv run ruff check
-uv run mypy src
+uv run pytest && uv run ruff check && uv run mypy src
 ```
 
-## Status
+## License
 
-All five phases are in place: skeleton/config/utilities, static fetching, article
-/ contact / profile parsers, the Obsidian exporter, dynamic Playwright fetching
-with static→dynamic escalation, and the Claude structured-output LLM fallback
-(opt-in via `SCRAPER_LLM__ENABLED=true` + `ANTHROPIC_API_KEY`).
+MIT — free to use, modify, and share.

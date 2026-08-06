@@ -6,11 +6,13 @@ from webscraper_core.parsers.article import ArticleParser
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.parsers.contact import ContactParser
 from webscraper_core.parsers.profile import ProfileParser
+from webscraper_core.parsers.research import ResearchParser
 
 _PARSERS: dict[str, type[BaseParser]] = {
     ArticleParser.task: ArticleParser,
     ContactParser.task: ContactParser,
     ProfileParser.task: ProfileParser,
+    ResearchParser.task: ResearchParser,
 }
 
 

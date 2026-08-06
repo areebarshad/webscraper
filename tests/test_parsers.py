@@ -7,10 +7,11 @@ from webscraper_core.parsers.article import ArticleParser
 from webscraper_core.parsers.contact import ContactParser
 from webscraper_core.parsers.profile import ProfileParser
 from webscraper_core.parsers.registry import available_tasks, get_parser
+from webscraper_core.parsers.research import ResearchParser
 
 
 def test_registry_tasks() -> None:
-    assert available_tasks() == ["article", "contact", "profile"]
+    assert available_tasks() == ["article", "contact", "profile", "research"]
     assert isinstance(get_parser("article"), ArticleParser)
 
 
@@ -67,3 +68,20 @@ def test_profile_parse(profile_result: FetchResult) -> None:
 
 def test_profile_parse_empty_returns_none(empty_result: FetchResult) -> None:
     assert ProfileParser().parse(empty_result) is None
+
+
+def test_research_parse(research_result: FetchResult) -> None:
+    note = ResearchParser().parse(research_result)
+    assert note is not None
+    assert "Turing" in note.name
+    assert len(note.items) >= 3
+    # The two linked papers keep absolute URLs; years are pulled from the text.
+    urls = [i.url for i in note.items if i.url]
+    assert any(u.startswith("https://example.edu") for u in urls)
+    assert any(i.year == 1950 for i in note.items)
+    body = note.body()
+    assert "[[Prof. Alan Turing]]" in body  # links back to the contact note
+
+
+def test_research_parse_empty_returns_none(empty_result: FetchResult) -> None:
+    assert ResearchParser().parse(empty_result) is None

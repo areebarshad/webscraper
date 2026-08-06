@@ -10,6 +10,7 @@ from webscraper_core.config import Settings
 from webscraper_core.exporters.obsidian import ObsidianExporter, render_note
 from webscraper_core.schemas.article import ArticleNote
 from webscraper_core.schemas.contact import ContactNote
+from webscraper_core.schemas.research import ResearchItem, ResearchNote
 
 
 def _settings(tmp_path: Path, **kw: object) -> Settings:
@@ -71,6 +72,17 @@ def test_export_writes_contact_to_contacts_dir(tmp_path: Path) -> None:
     path = exporter.export(_contact())
     assert path == tmp_path / "Contacts" / "Jane Doe.md"
     assert "[[Acme Corp]]" in path.read_text(encoding="utf-8")
+
+
+def test_export_writes_research_to_research_dir(tmp_path: Path) -> None:
+    note = ResearchNote(
+        source_url="https://example.edu/~turing",
+        name="Alan Turing",
+        items=[ResearchItem(title="Computing Machinery and Intelligence", year=1950)],
+    )
+    path = ObsidianExporter(_settings(tmp_path)).export(note)
+    assert path == tmp_path / "Research" / "Alan Turing - Research.md"
+    assert "[[Alan Turing]]" in path.read_text(encoding="utf-8")
 
 
 def test_illegal_title_sanitized_in_path(tmp_path: Path) -> None:

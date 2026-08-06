@@ -36,3 +36,23 @@ class LLMProfile(BaseModel):
     location: str | None = Field(default=None, description="Location, if stated.")
     company: str | None = Field(default=None, description="Employer or organization.")
     emails: list[str] = Field(default_factory=list, description="Email addresses.")
+
+
+class LLMResearchItem(BaseModel):
+    title: str = Field(description="Title of the paper, project, or publication.")
+    url: str | None = Field(default=None, description="Link to the source, if present.")
+    year: int | None = Field(default=None, description="Year of publication, if stated.")
+    venue: str | None = Field(
+        default=None, description="Journal, conference, or publisher, if stated."
+    )
+    summary: str | None = Field(default=None, description="One-line summary, if available.")
+
+
+class LLMResearch(BaseModel):
+    name: str = Field(description="The researcher's full name.")
+    affiliation: str | None = Field(
+        default=None, description="University, department, or organization."
+    )
+    items: list[LLMResearchItem] = Field(
+        default_factory=list, description="Every distinct publication or research work found."
+    )
