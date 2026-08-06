@@ -79,6 +79,7 @@ class Settings(BaseSettings):
     vault_path: Path = Path("vault")
     contacts_dir: str = "Contacts"
     articles_dir: str = "Articles"
+    profiles_dir: str = "Profiles"
     overwrite_existing: bool = False
 
     fetch: FetchSettings = Field(default_factory=FetchSettings)

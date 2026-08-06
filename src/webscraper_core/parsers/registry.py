@@ -5,10 +5,12 @@ from __future__ import annotations
 from webscraper_core.parsers.article import ArticleParser
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.parsers.contact import ContactParser
+from webscraper_core.parsers.profile import ProfileParser
 
 _PARSERS: dict[str, type[BaseParser]] = {
     ArticleParser.task: ArticleParser,
     ContactParser.task: ContactParser,
+    ProfileParser.task: ProfileParser,
 }
 
 

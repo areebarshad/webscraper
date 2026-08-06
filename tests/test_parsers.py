@@ -5,11 +5,12 @@ from __future__ import annotations
 from webscraper_core.fetchers.base import FetchResult
 from webscraper_core.parsers.article import ArticleParser
 from webscraper_core.parsers.contact import ContactParser
+from webscraper_core.parsers.profile import ProfileParser
 from webscraper_core.parsers.registry import available_tasks, get_parser
 
 
 def test_registry_tasks() -> None:
-    assert available_tasks() == ["article", "contact"]
+    assert available_tasks() == ["article", "contact", "profile"]
     assert isinstance(get_parser("article"), ArticleParser)
 
 
@@ -51,3 +52,18 @@ def test_contact_parse(contact_result: FetchResult) -> None:
 
 def test_contact_parse_empty_returns_none(empty_result: FetchResult) -> None:
     assert ContactParser().parse(empty_result) is None
+
+
+def test_profile_parse(profile_result: FetchResult) -> None:
+    note = ProfileParser().parse(profile_result)
+    assert note is not None
+    assert note.name == "Jane Doe"
+    assert note.headline and "Engineering" in note.headline
+    assert note.location == "Berlin, Germany"
+    assert note.socials.get("github", "").endswith("/janedoe")
+    assert "jane@devhub.io" in note.emails
+    assert note.note_kind == "profile"
+
+
+def test_profile_parse_empty_returns_none(empty_result: FetchResult) -> None:
+    assert ProfileParser().parse(empty_result) is None

@@ -4,6 +4,7 @@
 vault_path: "vault"
 contacts_dir: "Contacts"
 articles_dir: "Articles"
+profiles_dir: "Profiles"
 
 # Overwrite existing notes, or write a unique " (2)" suffixed file on collision.
 overwrite_existing: false

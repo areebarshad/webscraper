@@ -30,6 +30,13 @@ uv sync --extra dev
 cp .env.example .env    # add ANTHROPIC_API_KEY if using the LLM fallback
 ```
 
+For dynamic (JS-rendered) fetching with `--dynamic`, install the browser extra:
+
+```bash
+uv sync --extra dev --extra dynamic
+uv run playwright install chromium
+```
+
 ## Usage
 
 ```bash
@@ -51,6 +58,6 @@ uv run mypy src
 
 ## Status
 
-Phase 1 (skeleton, config, ABCs, utilities) is in place. Static fetching,
-parsers, the Obsidian exporter, dynamic Playwright fetching, and the Claude LLM
-fallback land in Phases 2–5.
+Phases 1–4 are in place: skeleton/config/utilities, static fetching, article /
+contact / profile parsers, the Obsidian exporter, and dynamic Playwright
+fetching with static→dynamic escalation. The Claude LLM fallback lands in Phase 5.

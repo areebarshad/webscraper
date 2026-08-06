@@ -7,7 +7,8 @@ from pathlib import Path
 
 from webscraper_core.config import Settings, load_settings
 from webscraper_core.exporters.obsidian import ObsidianExporter
-from webscraper_core.fetchers.router import select_fetcher
+from webscraper_core.fetchers.base import FetchResult
+from webscraper_core.fetchers.router import looks_js_rendered, select_fetcher
 from webscraper_core.parsers.registry import get_parser
 from webscraper_core.schemas.base import ScrapeRecord
 from webscraper_core.utils.logging import get_logger
@@ -33,21 +34,31 @@ class Pipeline:
 
     async def run(self, url: str, task: str, *, force_dynamic: bool = False) -> ScrapeRecord:
         parser = get_parser(task)  # validates task early
-        fetcher = select_fetcher(self.settings, force_dynamic=force_dynamic)
-        try:
-            result = await fetcher.fetch(url)
-        finally:
-            await fetcher.aclose()
 
-        log.info("fetched %s (%s) task=%s", result.final_url, result.status, task)
-
+        result = await self._fetch(url, force_dynamic=force_dynamic)
         record = parser.parse(result)
+
+        # Escalate to the dynamic fetcher when a static page looks JS-rendered.
+        if record is None and not force_dynamic and looks_js_rendered(result):
+            log.info("static under-rendered; escalating to dynamic fetch task=%s", task)
+            result = await self._fetch(url, force_dynamic=True)
+            record = parser.parse(result)
+
         if record is None:
             log.info("rule parse empty; trying llm_fallback task=%s", task)
             record = parser.llm_fallback(result)
         if record is None:
             raise ScrapeError(f"no data extracted for task={task!r} at {url}")
         return record
+
+    async def _fetch(self, url: str, *, force_dynamic: bool) -> FetchResult:
+        fetcher = select_fetcher(self.settings, force_dynamic=force_dynamic)
+        try:
+            result = await fetcher.fetch(url)
+        finally:
+            await fetcher.aclose()
+        log.info("fetched %s (%s) dynamic=%s", result.final_url, result.status, force_dynamic)
+        return result
 
     async def run_many(
         self, urls: list[str], task: str, *, concurrency: int = 5, force_dynamic: bool = False

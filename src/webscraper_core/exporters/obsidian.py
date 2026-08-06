@@ -39,6 +39,7 @@ class ObsidianExporter(BaseExporter):
         self._subdirs = {
             "article": settings.articles_dir,
             "contact": settings.contacts_dir,
+            "profile": settings.profiles_dir,
         }
 
     def _target_dir(self, record: ScrapeRecord) -> Path:

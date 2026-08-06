@@ -29,3 +29,8 @@ def contact_result() -> FetchResult:
 @pytest.fixture
 def empty_result() -> FetchResult:
     return load_fixture("empty.html", "https://spa.example.com/app")
+
+
+@pytest.fixture
+def profile_result() -> FetchResult:
+    return load_fixture("profile.html", "https://devhub.io/janedoe")
