@@ -52,7 +52,23 @@ class ObsidianExporter(BaseExporter):
 
     def _target_dir(self, record: ScrapeRecord) -> Path:
         subdir = self._subdirs.get(record.note_kind, record.note_kind.capitalize())
-        return self.settings.vault_path / subdir
+        directory = self.settings.vault_path / subdir
+        return self._require_inside_vault(directory)
+
+    def _require_inside_vault(self, path: Path) -> Path:
+        """Guarantee ``path`` stays inside the configured vault root.
+
+        Defends the vault boundary: a stray ``..`` or absolute value in a
+        ``*_dir`` config field (or a ``note_kind``) must never let a write land
+        in a sibling folder like ``raw/job-descriptions`` or ``raw/network``.
+        """
+        root = self.settings.vault_path.resolve()
+        resolved = path.resolve()
+        if resolved != root and not resolved.is_relative_to(root):
+            raise ValueError(
+                f"refusing to write outside vault root {root}: {resolved}"
+            )
+        return resolved
 
     def export(self, record: ScrapeRecord) -> Path:
         directory = self._target_dir(record)
@@ -64,6 +80,7 @@ class ObsidianExporter(BaseExporter):
         else:
             path = unique_path(directory, stem)
 
+        path = self._require_inside_vault(path)
         path.write_text(render_note(record), encoding="utf-8")
         log.info("wrote %s note -> %s", record.note_kind, path)
         return path
