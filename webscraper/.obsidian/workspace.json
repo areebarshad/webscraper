@@ -11,10 +11,14 @@
             "id": "b170c23043849908",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Index.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Index"
             }
           }
         ]
@@ -177,8 +181,36 @@
       "bases:Create new base": false
     }
   },
-  "active": "b3c07654b6d5d4d1",
+  "active": "b170c23043849908",
   "lastOpenFiles": [
-    "Welcome.md"
+    "Articles/Jennifer Van Mullekom.md",
+    "Research",
+    "Contacts",
+    "Index.md",
+    "Robert Brandon Gramacy.md",
+    "Welcome.md",
+    "Research/Robert Brandon Gramacy - Research.md",
+    "Research/Home - Research.md",
+    "Contacts/Angela Patterson.md",
+    "Contacts/Xinwei Deng (2).md",
+    "Contacts/Laura Freeman (2).md",
+    "Contacts/Christopher T. Franck.md",
+    "Contacts/Christopher T. Franck (2).md",
+    "Hubs/Faculty.md",
+    "Hubs/Research.md",
+    "Hubs",
+    "Contacts/Feng Guo (2).md",
+    "Contacts/Ronald D. Fricker, Jr (2).md",
+    "Contacts/Robert Brandon Gramacy (2).md",
+    "Contacts/Marco A.R. Ferreira (2).md",
+    "Contacts/Pang Du (2).md",
+    "Contacts/Anne G. Ryan Driscoll (2).md",
+    "Contacts/Hongxiao Zhu.md",
+    "Contacts/Stephanie DeHart (2).md",
+    "Contacts/Carrie Case (2).md",
+    "Contacts/Xin Xing.md",
+    "Contacts/Zhiyang Zhang.md",
+    "Contacts/Xiaowei Wu.md",
+    "Contacts/Young Ho Yun.md"
   ]
 }
