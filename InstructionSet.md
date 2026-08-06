@@ -97,7 +97,58 @@ uv run scraper batch --file urls.txt --task article
 
 ---
 
-## 6. Shared flags (scrape / person / batch)
+## 6. Crawl a whole site (recursive multi-level)
+
+`scrape` and `batch` each handle one page at a time. `crawl` starts at a **hub**
+page — a faculty directory, a company team page, a product listing, a docs root, a
+lecture outline — follows its in-content links, and scrapes every child page it
+finds:
+
+```bash
+uv run scraper crawl "<seed-url>"                        # depth 1, auto-detect task
+uv run scraper crawl "<seed-url>" --depth 2 --task contact
+```
+
+What you get out of one run:
+
+- A **hub note** in `Hubs/<Seed Title>.md` — a map-of-content that lists every
+  child it harvested as a `[[wikilink]]`.
+- One **child note** per discovered page, filed in its normal category folder
+  (`Contacts/`, `Articles/`, `Profiles/`, ...). Every child gets a
+  `parent: "[[Seed Title]]"` frontmatter key and a "Part of [[Seed Title]]"
+  backlink, so the hub and its children form a connected cluster in Obsidian's
+  graph.
+
+How it decides what to follow and scrape:
+
+- **Link discovery** harvests only in-content links. Navigation menus, footers,
+  sidebars, `mailto:`/`tel:` links, on-page `#anchors`, and (by default) other
+  domains are all ignored — you get the page's real subjects, not its chrome.
+- **`--task auto`** (the default) classifies each child page on its own: a page
+  with a contact email becomes a `contact`, a long-form page becomes an `article`,
+  and so on. Pass `--task contact` (or any task) to force one type for every child.
+
+Crawl-specific flags:
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `--depth <int>` | `1` | Levels of sub-links to follow. `1` = seed + its direct links; `2` also follows each child's links. |
+| `--max-pages <int>` | `20` | Hard safety cap on how many pages a single run will scrape. |
+| `--task <type\|auto>` | `auto` | Force a child task type, or infer it per page. |
+| `--same-domain` / `--allow-external` | `--same-domain` | Stay on the seed's host, or follow links onto other domains. |
+
+It also takes the shared flags below (`--dynamic`, `--overwrite`, `--index`,
+`--vault`) and `-c/--concurrency`. It stays polite throughout — the same per-host
+throttle, retry backoff, and `robots.txt` checks as every other command — never
+scrapes the same URL twice in a run, and one bad page never aborts the crawl.
+
+Defaults for `--depth`, `--max-pages`, and `--same-domain` come from the `crawl`
+block in `config.yaml` (or `SCRAPER_CRAWL__*` env vars); the flags override them
+per run.
+
+---
+
+## 7. Shared flags (scrape / person / batch / crawl)
 
 | Flag | Effect |
 |------|--------|
@@ -106,12 +157,12 @@ uv run scraper batch --file urls.txt --task article
 | `--index` / `--no-index` | Force the `Index.md` rebuild on or off for this run, overriding the `auto_index` config default. |
 | `--vault <path>` | Write to a different vault than the configured one. |
 
-`--dynamic`, `--file`, and `-c` are only meaningful where listed; `--file` and
-`-c` belong to `batch`.
+`--file` belongs to `batch` only; `-c/--concurrency` belongs to `batch` and
+`crawl`.
 
 ---
 
-## 7. The vault index
+## 8. The vault index
 
 `Index.md` at the top of the vault is a map-of-content: one section per category,
 listing every note as a clickable `[[link]]`.
@@ -131,7 +182,7 @@ whole vault each time.
 
 ---
 
-## 8. Graph connections
+## 9. Graph connections
 
 Notes are wired together on purpose so the graph view is useful, not a scatter of
 islands:
@@ -141,10 +192,12 @@ islands:
   so colleagues at the same place share a hub. A bare domain (e.g. `example.com`)
   is left as plain text to avoid a junk hub node.
 - **Articles** link their `[[Author]]`, grouping everything that author wrote.
+- A **crawl** hub note links to every child it harvested, and each child links
+  back with a `parent` key and a backlink — the whole crawl becomes one cluster.
 
 ---
 
-## 9. Choosing your vault
+## 10. Choosing your vault
 
 By default, notes go to the bundled `webscraper/` vault (already set up with the
 category folders, a Welcome note, and a live Index). To use your own vault:
@@ -163,7 +216,7 @@ Category folders are created automatically on the first write.
 
 ---
 
-## 10. AI fallback (optional, opt-in)
+## 11. AI fallback (optional, opt-in)
 
 Most pages are handled by fast built-in rules. For pages too irregular for rules,
 Claude can read the cleaned page text and extract structured data. It is **off by
@@ -184,7 +237,7 @@ Behavior worth knowing:
 
 ---
 
-## 11. JavaScript-heavy sites
+## 12. JavaScript-heavy sites
 
 After the one-time Playwright setup (Section 1), the scraper renders JS pages in a
 real headless browser automatically when a static fetch comes back empty. Force it
@@ -193,7 +246,7 @@ installed, such pages simply come back empty.
 
 ---
 
-## 12. Configuration
+## 13. Configuration
 
 Defaults live in `config.yaml`. Override any value without editing the file using
 `SCRAPER_`-prefixed environment variables (`__` marks nesting):
@@ -215,11 +268,14 @@ Keys you will actually touch:
 | `throttle.rate` | `1.0` | Requests per second, per host |
 | `fetch.timeout` | `20.0` | Request timeout in seconds |
 | `fetch.respect_robots` | `true` | Honor `robots.txt` |
+| `crawl.default_depth` | `1` | Default `crawl` depth when `--depth` is omitted |
+| `crawl.max_pages` | `20` | Default `crawl` page cap when `--max-pages` is omitted |
+| `crawl.same_domain` | `true` | Whether `crawl` stays on the seed host by default |
 | `llm.enabled` | `false` | AI fallback on/off |
 
 ---
 
-## 13. Scrape responsibly
+## 14. Scrape responsibly
 
 - `robots.txt` is honored by default. Leave it on. It can be disabled with
   `SCRAPER_FETCH__RESPECT_ROBOTS=false`, but only do so where you have the right.
@@ -229,7 +285,7 @@ Keys you will actually touch:
 
 ---
 
-## 14. Quick reference
+## 15. Quick reference
 
 ```bash
 uv run scraper tasks                                   # list task types
@@ -239,6 +295,8 @@ uv run scraper scrape "<url>" -t article --no-write    # preview only
 uv run scraper person "<url>"                          # contact + research
 uv run scraper batch "<u1>" "<u2>" -t contact          # many pages
 uv run scraper batch --file urls.txt -t article        # from a file
+uv run scraper crawl "<seed>"                          # recursive crawl (depth 1)
+uv run scraper crawl "<seed>" --depth 2 --max-pages 40 # deeper, higher cap
 uv run scraper index                                   # rebuild Index.md
 uv run scraper --help                                  # full reference
 ```

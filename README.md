@@ -22,6 +22,10 @@ visits.
 - **👤 Knows people.** Scrape a professor once and get **two** linked notes: their
   contact details *and* a list of their publications, each with a link back to
   where it was found.
+- **🕸️ Crawls, not just clicks.** Point it at a hub page — a faculty directory, a
+  team page, a product listing, a docs root — and it follows the links on that
+  page and scrapes each one, building a parent "map" note that links to every
+  child it found.
 - **🧠 Smart fallback, used sparingly.** When a page is messy or unusual, it can
   call in Claude (Anthropic's AI) to read it and extract clean, structured data —
   but only if you turn it on, only after the free built‑in rules come up empty,
@@ -122,12 +126,52 @@ uv run scraper --help      # full command reference
 
 ---
 
+## Crawl a whole hub in one go 🕸️
+
+The commands above scrape pages you already have links to. `crawl` goes one step
+further: give it a single **hub page** — a department faculty list, a company team
+page, a product directory, a lecture outline, a documentation root — and it finds
+the relevant links on that page and scrapes each one for you.
+
+```bash
+# Scrape a faculty directory and every professor it links to
+uv run scraper crawl "https://university.edu/department/faculty"
+
+# Go two levels deep, and force every child to be a contact note
+uv run scraper crawl "https://acme.com/team" --depth 2 --task contact
+```
+
+You end up with:
+
+- A **hub note** (in `Hubs/`) that acts as a table of contents, linking to every
+  page it scraped.
+- One **note per child page**, sorted into the usual folders, each linking *back*
+  to the hub — so in Obsidian's graph the whole set shows up as one tidy cluster
+  instead of scattered notes.
+
+It's smart about what it follows: it grabs the real links in the page's content
+and skips menus, footers, share buttons, and links off to other websites. By
+default it detects the best note type for each page automatically (`--task auto`),
+but you can force one with `--task`. A couple of guardrails keep runs sane:
+
+```bash
+--depth 1            # how many link-levels to follow (default: 1)
+--max-pages 20       # never scrape more than this many pages (default: 20)
+--allow-external     # opt in to following links to other domains
+```
+
+And of course it stays polite the whole time — same `robots.txt` respect, per-site
+rate limiting, and gentle retries as everything else, and it never scrapes the
+same page twice in a run.
+
+---
+
 ## One map for your whole vault 🗺️
 
 Every scrape **automatically refreshes** `Index.md` at the top of your vault — a
-section per category (Articles, Contacts, Profiles, Research) listing every note
-as a clickable `[[link]]`. Open it in Obsidian and everything is one hop away; you
-never have to maintain it.
+section per category (Hubs, Articles, Contacts, Profiles, Research) listing every
+note as a clickable `[[link]]`. Open it in Obsidian and everything is one hop away;
+you never have to maintain it.
 
 Prefer to do it by hand? Rebuild it anytime with `uv run scraper index`, or turn
 the automatic refresh off per‑run with `--no-index` (or set `auto_index: false`
