@@ -17,6 +17,7 @@ from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.schemas.llm import LLMResearch
 from webscraper_core.schemas.research import ResearchItem, ResearchNote
+from webscraper_core.utils.htmlclean import strip_noise
 
 _YEAR = re.compile(r"\b(19|20)\d{2}\b")
 _MIN_TITLE = 20  # publication titles are long; filters nav/menu noise
@@ -28,7 +29,8 @@ class ResearchParser(BaseParser):
 
     def parse(self, res: FetchResult) -> ResearchNote | None:
         tree = HTMLParser(res.html)
-        name = self._name(tree, res.final_url)
+        name = self._name(tree, res.final_url)  # before stripping (h1 may sit in header)
+        strip_noise(tree)  # drop nav/footer/scripts so they aren't counted as items
         items = self._items(tree, res.final_url)
         if not items:
             return None

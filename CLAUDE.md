@@ -36,9 +36,13 @@ with `--index`.
 3. **Fallbacks must never crash the run.** `llm_fallback` and dynamic-fetch
    escalation catch their own failures and return `None` / skip. A single bad
    URL must not abort a batch.
-4. **The LLM is opt-in and cost-guarded.** `LLMExtractor` does nothing unless
-   `SCRAPER_LLM__ENABLED=true` and `ANTHROPIC_API_KEY` is set. Don't call the
-   Anthropic API in tests — use a fake extractor (see `tests/test_llm.py`).
+4. **The LLM is opt-in, cost-guarded, and last.** `LLMExtractor` does nothing
+   unless `SCRAPER_LLM__ENABLED=true` and `ANTHROPIC_API_KEY` is set. It runs only
+   after rule parsers return `None`, is sent **cleaned** page text (never raw
+   HTML — `readable_text` uses trafilatura / `utils/htmlclean.clean_text`), and is
+   **skipped entirely** when that text is shorter than `llm.min_chars` (404s /
+   empty JS shells). Keep it this way: improve the rule parsers before reaching
+   for the model. Don't call the Anthropic API in tests — use a fake extractor.
 5. **Git is the user's job.** Never run `git commit`/`push`/`merge`/`rebase`.
    Suggest the commands; the user runs them.
 6. **Stay a polite crawler.** `RobotsGate` (checked in `pipeline.run`) honors
@@ -58,8 +62,14 @@ src/webscraper_core/
   schemas/        base, article, contact, profile, research, llm
   exporters/      base, obsidian (note writing), index (vault map-of-content)
   llm/            anthropic_client (Claude structured-output extractor)
-  utils/          throttle, retry, useragent, sanitize, robots, logging
+  utils/          throttle, retry, useragent, sanitize, robots, htmlclean, logging
 ```
+
+`utils/htmlclean.py` is the shared cleaner: `strip_noise` / `clean_text` drop
+scripts, nav, footers, and forms; `mailto_addresses` / `tel_numbers` /
+`find_jsonld` let rule parsers read links and schema.org data natively. Prefer
+these over scanning raw HTML — they cut false positives in the parsers and LLM
+input tokens by ~80–90%.
 
 ## Categories → vault folders
 

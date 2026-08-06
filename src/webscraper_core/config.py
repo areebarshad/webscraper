@@ -49,6 +49,9 @@ class LLMSettings(BaseModel):
     enabled: bool = False
     model: str = "claude-sonnet-5"
     max_tokens: int = 2048
+    # Skip the LLM entirely when the cleaned page text is shorter than this
+    # (404 pages, empty JS shells) — never pay for "no data found".
+    min_chars: int = 400
 
 
 class _YamlSource(PydanticBaseSettingsSource):

@@ -55,6 +55,33 @@ def test_contact_parse_empty_returns_none(empty_result: FetchResult) -> None:
     assert ContactParser().parse(empty_result) is None
 
 
+_JSONLD_CONTACT = """
+<html><head><script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Dr. Grace Hopper",
+ "email":"grace@navy.mil","telephone":"+1-202-555-0143",
+ "worksFor":{"@type":"Organization","name":"US Navy"}}
+</script></head><body>
+  <h1>Faculty</h1>
+  <p>Reach the office at <a href="tel:+12025550188">+1 202 555 0188</a>.</p>
+  <footer>Call our spam line +1 000 000 0000</footer>
+</body></html>
+"""
+
+
+def test_contact_uses_jsonld_and_tel() -> None:
+    res = FetchResult(url="https://navy.mil/g", final_url="https://navy.mil/g",
+                      status=200, html=_JSONLD_CONTACT)
+    note = ContactParser().parse(res)
+    assert note is not None
+    assert note.name == "Dr. Grace Hopper"        # from JSON-LD, not the <h1>
+    assert "grace@navy.mil" in note.emails         # JSON-LD email
+    assert note.company == "US Navy"               # JSON-LD worksFor
+    assert any("0143" in p for p in note.phones)   # JSON-LD telephone
+    assert any("0188" in p for p in note.phones)   # tel: link
+    # Footer number is stripped as noise, so it must not appear.
+    assert not any("000 000 0000" in p for p in note.phones)
+
+
 def test_profile_parse(profile_result: FetchResult) -> None:
     note = ProfileParser().parse(profile_result)
     assert note is not None

@@ -13,13 +13,13 @@ from typing import TYPE_CHECKING, TypeVar
 
 import trafilatura
 from pydantic import BaseModel
-from selectolax.parser import HTMLParser
 
 if TYPE_CHECKING:
     from anthropic import AsyncAnthropic
 
 from webscraper_core.config import LLMSettings
 from webscraper_core.fetchers.base import FetchResult
+from webscraper_core.utils.htmlclean import clean_text
 from webscraper_core.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -31,12 +31,14 @@ _MAX_TEXT_CHARS = 12_000
 
 
 def readable_text(res: FetchResult) -> str:
-    """Best-effort readable text from a page for the model to extract from."""
+    """Clean, noise-free page text for the model — never raw HTML.
+
+    trafilatura's article extraction first (strips boilerplate); if it finds
+    nothing, fall back to visible text with scripts/nav/footer/forms stripped.
+    Either way the model never sees markup, scripts, or chrome.
+    """
     extracted = trafilatura.extract(res.html, url=res.final_url, favor_recall=True)
-    if extracted:
-        return extracted[:_MAX_TEXT_CHARS]
-    tree = HTMLParser(res.html)
-    text = tree.body.text(separator="\n", strip=True) if tree.body else res.html
+    text = extracted or clean_text(res.html)
     return text[:_MAX_TEXT_CHARS]
 
 
@@ -63,6 +65,16 @@ class LLMExtractor:
             return None
 
         text = readable_text(res)
+        if len(text) < self.settings.min_chars:
+            # 404 pages / empty JS shells — don't pay the model to find nothing.
+            log.info(
+                "skipping LLM: only %d chars of content (min %d) at %s",
+                len(text),
+                self.settings.min_chars,
+                res.final_url,
+            )
+            return None
+
         client = self._get_client()
         try:
             response = await client.messages.parse(

@@ -49,6 +49,22 @@ async def test_extractor_disabled_returns_none() -> None:
     assert await extractor.extract(_res(), LLMArticle, "x") is None
 
 
+async def test_extractor_skips_short_pages_without_calling_api(
+    monkeypatch,  # type: ignore[no-untyped-def]
+) -> None:
+    # Enabled + key present, but the page is a near-empty shell: the gate must
+    # skip the API call entirely (no client is ever constructed).
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-not-used")
+    extractor = LLMExtractor(LLMSettings(enabled=True, min_chars=400))
+    assert extractor.enabled is True
+    tiny = FetchResult(
+        url="https://x.com", final_url="https://x.com", status=200,
+        html="<html><body><div id='app'></div><p>Loading...</p></body></html>",
+    )
+    assert await extractor.extract(tiny, LLMArticle, "x") is None
+    assert extractor._client is None  # never built -> no network, no cost
+
+
 async def test_article_llm_fallback_maps_note() -> None:
     fake = _FakeExtractor(
         {LLMArticle: LLMArticle(title="Deep Dive", author="Ann", published="2026-01-02",

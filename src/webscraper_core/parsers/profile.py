@@ -18,6 +18,7 @@ from webscraper_core.parsers.base import BaseParser
 from webscraper_core.parsers.contact import _EMAIL, _SOCIAL_HOSTS, _dedup
 from webscraper_core.schemas.llm import LLMProfile
 from webscraper_core.schemas.profile import ProfileNote
+from webscraper_core.utils.htmlclean import clean_text, find_jsonld, mailto_addresses
 
 
 def _meta(tree: HTMLParser, *names: str) -> str | None:
@@ -56,13 +57,21 @@ class ProfileParser(BaseParser):
         return self._generic(tree, res)
 
     def _generic(self, tree: HTMLParser, res: FetchResult) -> ProfileNote | None:
-        name = _meta(tree, "og:title", "profile:username") or self._heading(tree)
+        person = find_jsonld(tree, "Person") or {}
+        person_name = person.get("name")
+        name = (
+            (person_name if isinstance(person_name, str) else None)
+            or _meta(tree, "og:title", "profile:username")
+            or self._heading(tree)
+        )
         if not name:
             return None
 
         headline = _meta(tree, "og:description", "description")
         location = _meta(tree, "profile:location", "geo.placename")
-        emails = _dedup(_EMAIL.findall(res.html))
+        # mailto: links plus emails in cleaned visible text (not raw HTML, so
+        # tracking/script emails don't leak in).
+        emails = _dedup([*mailto_addresses(tree), *_EMAIL.findall(clean_text(res.html))])
         socials = _socials(tree)
         company = _meta(tree, "og:site_name")
 

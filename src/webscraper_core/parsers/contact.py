@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from typing import Any
 from urllib.parse import urlsplit
 
 from selectolax.parser import HTMLParser
@@ -13,6 +14,12 @@ from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.schemas.contact import ContactNote
 from webscraper_core.schemas.llm import LLMContact
+from webscraper_core.utils.htmlclean import (
+    clean_text,
+    find_jsonld,
+    mailto_addresses,
+    tel_numbers,
+)
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # Phones: optional +, groups of digits with spaces/dashes/parens/dots, 7-15 digits total.
@@ -43,30 +50,52 @@ def _dedup(seq: Iterable[str]) -> list[str]:
     return list(seen)
 
 
+def _jsonld_list(value: Any) -> list[str]:
+    """A JSON-LD field that may be a string, a list, or absent -> list of strings."""
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    if isinstance(value, list):
+        return [v.strip() for v in value if isinstance(v, str) and v.strip()]
+    return []
+
+
+def _jsonld_name(person: dict[str, Any]) -> str | None:
+    name = person.get("name")
+    return name.strip() if isinstance(name, str) and name.strip() else None
+
+
 class ContactParser(BaseParser):
     task = "contact"
     engine = "selectolax"
 
     def parse(self, res: FetchResult) -> ContactNote | None:
         tree = HTMLParser(res.html)
-        body_text = tree.body.text(separator=" ", strip=True) if tree.body else ""
+        person = find_jsonld(tree, "Person") or {}
+        # Scan cleaned visible text (no nav/footer) so we don't harvest phone-like
+        # numbers or emails from chrome — precision over raw-HTML recall.
+        text = clean_text(res.html)
 
-        emails = _dedup(_EMAIL.findall(self._raw_and_mailto(tree, res.html)))
-        phones = _dedup(p for p in (_clean_phone(m) for m in _PHONE.findall(body_text)) if p)
+        emails = _dedup(
+            [*_jsonld_list(person.get("email")), *mailto_addresses(tree), *_EMAIL.findall(text)]
+        )
+        phones = _dedup(
+            [
+                *_jsonld_list(person.get("telephone")),
+                *tel_numbers(tree),
+                *(p for p in (_clean_phone(m) for m in _PHONE.findall(text)) if p),
+            ]
+        )
         socials = self._socials(tree)
 
         if not (emails or phones or socials):
             return None
 
-        name = self._name(tree, res.final_url)
-        company = self._company(tree, res.final_url)
-
         return ContactNote(
             source_url=res.final_url,
-            name=name,
+            name=_jsonld_name(person) or self._name(tree, res.final_url),
             emails=emails,
             phones=phones,
-            company=company,
+            company=self._company(tree, person, res.final_url),
             socials=socials,
         )
 
@@ -102,15 +131,6 @@ class ContactParser(BaseParser):
         )
 
     @staticmethod
-    def _raw_and_mailto(tree: HTMLParser, html: str) -> str:
-        """Text to scan for emails: visible text plus mailto: hrefs."""
-        mails = []
-        for a in tree.css("a[href^='mailto:']"):
-            href = a.attributes.get("href") or ""
-            mails.append(href.removeprefix("mailto:").split("?")[0])
-        return html + " " + " ".join(mails)
-
-    @staticmethod
     def _socials(tree: HTMLParser) -> dict[str, str]:
         found: dict[str, str] = {}
         for a in tree.css("a[href]"):
@@ -132,7 +152,12 @@ class ContactParser(BaseParser):
         return seg.replace("-", " ").replace("_", " ").title() or "Unknown"
 
     @staticmethod
-    def _company(tree: HTMLParser, url: str) -> str | None:
+    def _company(tree: HTMLParser, person: dict[str, Any], url: str) -> str | None:
+        works_for = person.get("worksFor")
+        if isinstance(works_for, dict) and works_for.get("name"):
+            return str(works_for["name"])
+        if isinstance(works_for, str) and works_for.strip():
+            return works_for
         meta = tree.css_first("meta[property='og:site_name']")
         if meta and meta.attributes.get("content"):
             return meta.attributes["content"]

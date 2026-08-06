@@ -35,3 +35,4 @@ llm:
   enabled: false          # opt-in; guards Anthropic API cost
   model: "claude-sonnet-5"
   max_tokens: 2048
+  min_chars: 400          # skip the LLM if cleaned page text is shorter than this

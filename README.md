@@ -22,9 +22,12 @@ visits.
 - **👤 Knows people.** Scrape a professor once and get **two** linked notes: their
   contact details *and* a list of their publications, each with a link back to
   where it was found.
-- **🧠 Smart fallback.** When a page is messy or unusual, it can call in Claude
-  (Anthropic's AI) to read the page and extract clean, structured data — but only
-  if you turn it on.
+- **🧠 Smart fallback, used sparingly.** When a page is messy or unusual, it can
+  call in Claude (Anthropic's AI) to read it and extract clean, structured data —
+  but only if you turn it on, only after the free built‑in rules come up empty,
+  and never for near‑empty pages (404s or blank shells are skipped, so you never
+  pay the AI to say "nothing here"). When it does run, it sees clean, stripped‑
+  down text — no scripts or clutter — keeping it fast and cheap.
 - **🌐 Handles modern sites.** Static pages are fetched fast; JavaScript‑heavy
   pages are rendered in a real browser automatically when needed.
 - **🗺️ One hub for everything.** Build an `Index.md` that links every note by
