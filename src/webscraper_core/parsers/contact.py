@@ -21,6 +21,16 @@ from webscraper_core.utils.htmlclean import (
     tel_numbers,
 )
 
+# Common two-label public suffixes, so example.co.uk -> "Example", not "Co".
+_MULTI_TLDS = frozenset(
+    {
+        "co.uk", "ac.uk", "org.uk", "gov.uk", "me.uk",
+        "com.au", "net.au", "org.au", "edu.au", "gov.au",
+        "co.nz", "co.za", "co.jp", "or.jp", "ne.jp",
+        "com.br", "com.cn", "co.in", "ac.in", "edu.in",
+    }
+)
+
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # Phones: optional +, groups of digits with spaces/dashes/parens/dots, 7-15 digits total.
 _PHONE = re.compile(r"(?<![\w.])(\+?\d[\d\s().-]{6,}\d)(?![\w])")
@@ -165,5 +175,11 @@ class ContactParser(BaseParser):
         if not host:
             return None
         parts = host.split(".")
-        sld = parts[-2] if len(parts) >= 2 else parts[0]  # the registrable name
+        # The registrable label: skip a known two-label suffix (co.uk, com.au, ...).
+        if len(parts) >= 3 and ".".join(parts[-2:]) in _MULTI_TLDS:
+            sld = parts[-3]
+        elif len(parts) >= 2:
+            sld = parts[-2]
+        else:
+            sld = parts[0]
         return sld.title()

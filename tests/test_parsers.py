@@ -68,6 +68,19 @@ _JSONLD_CONTACT = """
 """
 
 
+def test_contact_company_from_domain() -> None:
+    html = "<html><body><h1>Jane</h1><a href='mailto:j@x.com'>e</a></body></html>"
+
+    def company_for(url: str) -> str | None:
+        res = FetchResult(url=url, final_url=url, status=200, html=html)
+        note = ContactParser().parse(res)
+        return note.company if note else None
+
+    assert company_for("https://en.wikipedia.org/x") == "Wikipedia"  # skip subdomain
+    assert company_for("https://example.co.uk/x") == "Example"       # skip .co.uk suffix
+    assert company_for("https://acme.com/x") == "Acme"
+
+
 def test_contact_uses_jsonld_and_tel() -> None:
     res = FetchResult(url="https://navy.mil/g", final_url="https://navy.mil/g",
                       status=200, html=_JSONLD_CONTACT)

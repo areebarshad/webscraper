@@ -26,8 +26,10 @@ every note by category. It's rebuilt automatically after each scrape command
 on demand via `scraper index`.
 
 **Graph connections** are deliberate — keep notes cross-linked:
-- A contact note links to the person's `[[Name - Research]]`; the research note
-  links back with `[[Name]]` (two-way person connection).
+- A research note links to its person's contact with `[[Name]]` (the edge that
+  ties a person's research and contact notes together in the graph). Don't add a
+  reciprocal `[[Name - Research]]` from the contact side — it dangles as a junk
+  node for non-person / research-less contacts.
 - Contact/profile/research link their company/affiliation as `[[Org]]` (a shared
   hub) — but a bare domain affiliation is left plain to avoid a junk hub node.
 - Articles link `[[Author]]`. When adding a note type, wire it into an existing

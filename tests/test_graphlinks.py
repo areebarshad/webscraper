@@ -30,19 +30,21 @@ def _research(affiliation: str) -> ResearchNote:
     )
 
 
-def test_contact_links_to_research_and_company() -> None:
-    body = _contact().body()
-    assert "[[Jane Doe - Research|publications]]" in body  # forward → research
-    assert "[[Acme Corp]]" in body                          # company hub
+def test_contact_links_to_company_hub() -> None:
+    assert "[[Acme Corp]]" in _contact().body()  # company hub
 
 
 def test_research_links_back_to_contact() -> None:
-    body = _research("University of Example").body()
-    assert "[[Jane Doe]]" in body                            # back → contact
+    # The one edge that connects the person's research and contact notes in the graph.
+    assert "[[Jane Doe]]" in _research("University of Example").body()
 
 
 def test_research_affiliation_org_is_a_hub() -> None:
     assert "[[University of Example]]" in _research("University of Example").body()
+
+
+def test_research_affiliation_dotted_abbreviation_is_a_hub() -> None:
+    assert "[[N.Y.U.]]" in _research("N.Y.U.").body()  # not mistaken for a domain
 
 
 def test_research_affiliation_bare_domain_stays_plain() -> None:

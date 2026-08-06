@@ -7,9 +7,15 @@ with a link back to where it was found. The two link via a shared `[[Name]]`.
 
 from __future__ import annotations
 
+import re
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from webscraper_core.schemas.base import ScrapeRecord
+
+# A bare hostname (lowercase, dotted, no spaces) — not an institution to link.
+# "en.wikipedia.org" matches; "N.Y.U." / "University of Example" do not.
+_DOMAINISH = re.compile(r"^[a-z0-9-]+(\.[a-z0-9-]+)+$")
 
 
 class ResearchItem(BaseModel):
@@ -74,7 +80,7 @@ class ResearchNote(ScrapeRecord):
         if self.affiliation:
             # Wikilink a real org name (an institution hub); leave a bare domain plain.
             aff = self.affiliation
-            label = f"[[{aff}]]" if (" " in aff or "." not in aff) else aff
+            label = aff if _DOMAINISH.match(aff) else f"[[{aff}]]"
             lines.append(f"**Affiliation:** {label}")
         lines += ["", f"## Publications ({len(self.items)})", ""]
         for item in self.items:

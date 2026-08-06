@@ -33,9 +33,9 @@ visits.
 - **🗺️ A living index.** An `Index.md` map-of-content links every note by
   category and **refreshes itself after every scrape** — never stale, never
   hand-maintained.
-- **🔗 A graph that connects.** People link to their own publications and back,
-  colleagues share a company/institution hub, and article authors become hubs —
-  so Obsidian's graph view is actually meaningful, not a scatter of islands.
+- **🔗 A graph that connects.** A person's publications link to their contact
+  note, colleagues share a company/institution hub, and article authors become
+  hubs — so Obsidian's graph view is actually meaningful, not a scatter of islands.
 - **🤝 A polite guest.** Obeys each site's `robots.txt`, rotates browser
   identities, spaces out requests per site, and retries gently — so it behaves
   like a considerate visitor, not a hammer.
@@ -138,8 +138,8 @@ in `config.yaml`).
 Notes are wired together on purpose, so Obsidian's graph view is genuinely
 useful:
 
-- Scrape a **person** and their contact note links to their **publications**, and
-  the research note links back to them — a two‑way connection.
+- Scrape a **person** and their research note links straight to their contact
+  note, so their details and their publications sit together in the graph.
 - Everyone at the same **company or institution** links to a shared hub note, so
   colleagues cluster together.
 - Article **authors** become hubs too, grouping everything they wrote.
