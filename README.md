@@ -62,9 +62,12 @@ uv run scraper scrape "https://example.com/team/jane" --task contact
 uv run scraper scrape "https://example.com/some-article" --task article --no-write
 ```
 
-Your notes appear under the `vault/` folder, ready to open in Obsidian. Want them
-somewhere else? Add `--vault /path/to/YourVault` (or point `vault/` at your real
-vault).
+Your notes appear inside the bundled Obsidian vault at `webscraper/` — already set
+up with `Articles/`, `Contacts/`, `Profiles/`, and `Research/` folders, a
+**Welcome** note, and a live **Index**. Open that folder as a vault in Obsidian
+and everything is there. Want to use your **own** vault instead? Add
+`--vault /path/to/YourVault` to any command, or set `vault_path` in `config.yaml`
+(the scraper creates the category folders automatically on first write).
 
 ---
 

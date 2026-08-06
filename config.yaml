@@ -1,7 +1,9 @@
 # Default configuration. Override any value with env vars using the SCRAPER_ prefix
 # and __ for nesting, e.g. SCRAPER_FETCH__TIMEOUT=30, SCRAPER_VAULT_PATH=/path/to/vault.
 
-vault_path: "vault"
+# Path to your Obsidian vault. Defaults to the bundled `webscraper/` vault
+# (it contains the .obsidian config). Point this at your own vault to use it.
+vault_path: "webscraper"
 contacts_dir: "Contacts"
 articles_dir: "Articles"
 profiles_dir: "Profiles"

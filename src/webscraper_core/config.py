@@ -79,7 +79,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    vault_path: Path = Path("vault")
+    vault_path: Path = Path("webscraper")  # the bundled Obsidian vault
     contacts_dir: str = "Contacts"
     articles_dir: str = "Articles"
     profiles_dir: str = "Profiles"
