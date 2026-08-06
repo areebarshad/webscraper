@@ -85,6 +85,7 @@ class Settings(BaseSettings):
     profiles_dir: str = "Profiles"
     research_dir: str = "Research"
     overwrite_existing: bool = False
+    auto_index: bool = True  # refresh Index.md after each scrape command
 
     fetch: FetchSettings = Field(default_factory=FetchSettings)
     throttle: ThrottleSettings = Field(default_factory=ThrottleSettings)

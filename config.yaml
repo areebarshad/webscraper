@@ -12,6 +12,9 @@ research_dir: "Research"
 # Overwrite existing notes, or write a unique " (2)" suffixed file on collision.
 overwrite_existing: false
 
+# Rebuild Index.md automatically after every scrape (turn off with --no-index).
+auto_index: true
+
 fetch:
   timeout: 20.0            # total request timeout (seconds)
   connect_timeout: 10.0

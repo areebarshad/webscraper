@@ -21,8 +21,17 @@ URL (+ task)
 ```
 
 `exporters/index.py` builds a separate `vault/Index.md` map-of-content linking
-every note by category; it's rebuilt on demand (`scraper index`) or after a write
-with `--index`.
+every note by category. It's rebuilt automatically after each scrape command
+(config `auto_index`, default on; override per-run with `--index/--no-index`) or
+on demand via `scraper index`.
+
+**Graph connections** are deliberate — keep notes cross-linked:
+- A contact note links to the person's `[[Name - Research]]`; the research note
+  links back with `[[Name]]` (two-way person connection).
+- Contact/profile/research link their company/affiliation as `[[Org]]` (a shared
+  hub) — but a bare domain affiliation is left plain to avoid a junk hub node.
+- Articles link `[[Author]]`. When adding a note type, wire it into an existing
+  hub (person, org, or author) rather than leaving it an island.
 
 ## Golden rules — do not break these
 

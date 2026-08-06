@@ -61,6 +61,8 @@ class ContactNote(ScrapeRecord):
             lines.append(f"**Email:** {', '.join(self.emails)}")
         if self.phones:
             lines.append(f"**Phone:** {', '.join(self.phones)}")
+        # Reciprocal link to the person's research note (resolves once scraped).
+        lines.append(f"**Research:** [[{self.name} - Research|publications]]")
         if self.socials:
             lines += ["", "## Social"]
             lines += [f"- [{label}]({url})" for label, url in self.socials.items()]

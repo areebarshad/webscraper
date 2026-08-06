@@ -38,6 +38,13 @@ def _pipeline(vault: Path | None, overwrite: bool = False) -> Pipeline:
     return Pipeline(_make_settings(vault, overwrite))
 
 
+def _maybe_index(pipeline: Pipeline, override: bool | None) -> None:
+    """Rebuild Index.md if requested, or per the vault's auto_index setting."""
+    do = pipeline.settings.auto_index if override is None else override
+    if do:
+        build_index(pipeline.settings)
+
+
 @app.command()
 def version() -> None:
     """Print the installed version."""
@@ -70,8 +77,8 @@ def scrape(
         True, "--write/--no-write", help="Write the note to the vault, or preview only."
     ),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite an existing note."),
-    rebuild_index: bool = typer.Option(
-        False, "--index", help="Rebuild the vault Index.md afterwards."
+    rebuild_index: bool | None = typer.Option(
+        None, "--index/--no-index", help="Rebuild Index.md afterwards (default: config)."
     ),
     vault: Path | None = typer.Option(None, "--vault", help="Override the vault path."),
 ) -> None:
@@ -82,8 +89,7 @@ def scrape(
         if write:
             path = asyncio.run(pipeline.scrape_to_vault(url, task, force_dynamic=dynamic))
             typer.secho(f"Wrote {path}", fg=typer.colors.GREEN)
-            if rebuild_index:
-                build_index(pipeline.settings)
+            _maybe_index(pipeline, rebuild_index)
         else:
             record = asyncio.run(pipeline.run(url, task, force_dynamic=dynamic))
             typer.secho(f"Parsed {record.note_kind}: {record.title()}", fg=typer.colors.GREEN)
@@ -104,8 +110,8 @@ def person(
     url: str = typer.Argument(..., help="A person/faculty page URL."),
     dynamic: bool = typer.Option(False, "--dynamic", help="Force the Playwright fetcher."),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing notes."),
-    rebuild_index: bool = typer.Option(
-        False, "--index", help="Rebuild the vault Index.md afterwards."
+    rebuild_index: bool | None = typer.Option(
+        None, "--index/--no-index", help="Rebuild Index.md afterwards (default: config)."
     ),
     vault: Path | None = typer.Option(None, "--vault", help="Override the vault path."),
 ) -> None:
@@ -127,8 +133,7 @@ def person(
     if not any_ok:
         typer.secho("Nothing extracted for this person.", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1)
-    if rebuild_index:
-        build_index(pipeline.settings)
+    _maybe_index(pipeline, rebuild_index)
 
 
 @app.command()
@@ -139,8 +144,8 @@ def batch(
     concurrency: int = typer.Option(5, "--concurrency", "-c", help="Max concurrent fetches."),
     dynamic: bool = typer.Option(False, "--dynamic", help="Force the Playwright fetcher."),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing notes."),
-    rebuild_index: bool = typer.Option(
-        False, "--index", help="Rebuild the vault Index.md afterwards."
+    rebuild_index: bool | None = typer.Option(
+        None, "--index/--no-index", help="Rebuild Index.md afterwards (default: config)."
     ),
     vault: Path | None = typer.Option(None, "--vault", help="Override the vault path."),
 ) -> None:
@@ -167,8 +172,8 @@ def batch(
         typer.secho(f"  ✓ {url} → {path.name}", fg=typer.colors.GREEN)
         ok += 1
     typer.secho(f"Done: {ok}/{len(all_urls)} written.", fg=typer.colors.CYAN)
-    if rebuild_index and ok:
-        build_index(pipeline.settings)
+    if ok:
+        _maybe_index(pipeline, rebuild_index)
     if ok == 0:
         raise typer.Exit(code=1)
 

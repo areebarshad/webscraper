@@ -30,8 +30,12 @@ visits.
   down text — no scripts or clutter — keeping it fast and cheap.
 - **🌐 Handles modern sites.** Static pages are fetched fast; JavaScript‑heavy
   pages are rendered in a real browser automatically when needed.
-- **🗺️ One hub for everything.** Build an `Index.md` that links every note by
-  category — a single map-of-content to navigate your whole collection.
+- **🗺️ A living index.** An `Index.md` map-of-content links every note by
+  category and **refreshes itself after every scrape** — never stale, never
+  hand-maintained.
+- **🔗 A graph that connects.** People link to their own publications and back,
+  colleagues share a company/institution hub, and article authors become hubs —
+  so Obsidian's graph view is actually meaningful, not a scatter of islands.
 - **🤝 A polite guest.** Obeys each site's `robots.txt`, rotates browser
   identities, spaces out requests per site, and retries gently — so it behaves
   like a considerate visitor, not a hammer.
@@ -120,15 +124,25 @@ uv run scraper --help      # full command reference
 
 ## One map for your whole vault 🗺️
 
-As your collection grows, build a single index note that links everything:
+Every scrape **automatically refreshes** `Index.md` at the top of your vault — a
+section per category (Articles, Contacts, Profiles, Research) listing every note
+as a clickable `[[link]]`. Open it in Obsidian and everything is one hop away; you
+never have to maintain it.
 
-```bash
-uv run scraper index
-```
+Prefer to do it by hand? Rebuild it anytime with `uv run scraper index`, or turn
+the automatic refresh off per‑run with `--no-index` (or set `auto_index: false`
+in `config.yaml`).
 
-This writes `Index.md` at the top of your vault with a section per category —
-Articles, Contacts, Profiles, Research — each listing its notes as clickable
-`[[links]]`. Open it in Obsidian and every scrape is one hop away.
+### A graph that actually connects
+
+Notes are wired together on purpose, so Obsidian's graph view is genuinely
+useful:
+
+- Scrape a **person** and their contact note links to their **publications**, and
+  the research note links back to them — a two‑way connection.
+- Everyone at the same **company or institution** links to a shared hub note, so
+  colleagues cluster together.
+- Article **authors** become hubs too, grouping everything they wrote.
 
 ---
 

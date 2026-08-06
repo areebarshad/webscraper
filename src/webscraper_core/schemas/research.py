@@ -70,9 +70,12 @@ class ResearchNote(ScrapeRecord):
 
     def body(self) -> str:
         lines = [f"# {self.name} — Research", ""]
-        lines.append(f"Research by [[{self.name}]]")
+        lines.append(f"Research by [[{self.name}]]")  # links back to the contact note
         if self.affiliation:
-            lines.append(f"**Affiliation:** {self.affiliation}")
+            # Wikilink a real org name (an institution hub); leave a bare domain plain.
+            aff = self.affiliation
+            label = f"[[{aff}]]" if (" " in aff or "." not in aff) else aff
+            lines.append(f"**Affiliation:** {label}")
         lines += ["", f"## Publications ({len(self.items)})", ""]
         for item in self.items:
             meta = " · ".join(

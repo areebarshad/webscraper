@@ -162,4 +162,8 @@ class ContactParser(BaseParser):
         if meta and meta.attributes.get("content"):
             return meta.attributes["content"]
         host = urlsplit(url).netloc.removeprefix("www.")
-        return host.split(".")[0].title() if host else None
+        if not host:
+            return None
+        parts = host.split(".")
+        sld = parts[-2] if len(parts) >= 2 else parts[0]  # the registrable name
+        return sld.title()
