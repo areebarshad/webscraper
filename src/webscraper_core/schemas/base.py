@@ -25,6 +25,12 @@ class ScrapeRecord(BaseModel):
     source_url: str
     scraped_at: datetime = Field(default_factory=_utcnow)
 
+    # Set by the crawler when this note was discovered under a hub/seed page. The
+    # exporter injects a ``parent: "[[Hub]]"`` frontmatter key and a backlink
+    # section, so every note type gains parent linkage without touching its own
+    # frontmatter()/body(). Left None for standalone scrapes.
+    parent: str | None = Field(default=None, exclude=True)
+
     def title(self) -> str:
         """Human title used to build the note filename. Overridden by subclasses."""
         raise NotImplementedError

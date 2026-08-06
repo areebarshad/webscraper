@@ -28,7 +28,14 @@ def render_frontmatter(data: dict[str, object]) -> str:
 
 
 def render_note(record: ScrapeRecord) -> str:
-    return render_frontmatter(record.frontmatter()) + "\n" + record.body()
+    fm = record.frontmatter()
+    body = record.body()
+    # Crawler-set parent: wire the note back to its hub in both frontmatter (for
+    # dataview/queries) and the body (a visible backlink in Obsidian's graph).
+    if record.parent:
+        fm = {**fm, "parent": f"[[{record.parent}]]"}
+        body = body.rstrip() + f"\n\n---\n\n> Part of [[{record.parent}]]\n"
+    return render_frontmatter(fm) + "\n" + body
 
 
 class ObsidianExporter(BaseExporter):
@@ -41,6 +48,7 @@ class ObsidianExporter(BaseExporter):
             "contact": settings.contacts_dir,
             "profile": settings.profiles_dir,
             "research": settings.research_dir,
+            "hub": settings.hub_dir,
         }
 
     def _target_dir(self, record: ScrapeRecord) -> Path:

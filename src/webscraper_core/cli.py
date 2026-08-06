@@ -10,6 +10,7 @@ import typer
 
 from webscraper_core import __version__
 from webscraper_core.config import Settings, load_settings
+from webscraper_core.crawler import Crawler
 from webscraper_core.exporters.index import build_index
 from webscraper_core.parsers.registry import available_tasks
 from webscraper_core.pipeline import Pipeline, ScrapeError
@@ -175,6 +176,78 @@ def batch(
     if ok:
         _maybe_index(pipeline, rebuild_index)
     if ok == 0:
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def crawl(
+    url: str = typer.Argument(..., help="Seed URL to crawl from (a hub/list/directory page)."),
+    task: str = typer.Option(
+        "auto",
+        "--task",
+        "-t",
+        help="Child task type, or 'auto' to infer per page (see `scraper tasks`).",
+    ),
+    depth: int | None = typer.Option(
+        None, "--depth", help="Levels of sub-links to follow (default: config, 1)."
+    ),
+    max_pages: int | None = typer.Option(
+        None, "--max-pages", help="Safety cap on pages scraped (default: config, 20)."
+    ),
+    same_domain: bool | None = typer.Option(
+        None,
+        "--same-domain/--allow-external",
+        help="Stay on the seed host, or follow links to other domains.",
+    ),
+    concurrency: int = typer.Option(5, "--concurrency", "-c", help="Max concurrent fetches."),
+    dynamic: bool = typer.Option(False, "--dynamic", help="Force the Playwright fetcher."),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing notes."),
+    rebuild_index: bool | None = typer.Option(
+        None, "--index/--no-index", help="Rebuild Index.md afterwards (default: config)."
+    ),
+    vault: Path | None = typer.Option(None, "--vault", help="Override the vault path."),
+) -> None:
+    """Recursively crawl a seed page into a hub note plus linked child notes."""
+    setup_logging()
+    if task != "auto" and task not in available_tasks():
+        typer.secho(
+            f"unknown task {task!r}; use 'auto' or one of: {', '.join(available_tasks())}",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=2)
+
+    pipeline = _pipeline(vault, overwrite)
+    cfg = pipeline.settings.crawl
+    crawler = Crawler(pipeline)
+    try:
+        summary = asyncio.run(
+            crawler.crawl(
+                url,
+                task=task,
+                depth=cfg.default_depth if depth is None else depth,
+                max_pages=cfg.max_pages if max_pages is None else max_pages,
+                same_domain=cfg.same_domain if same_domain is None else same_domain,
+                force_dynamic=dynamic,
+                concurrency=concurrency,
+            )
+        )
+    except _FETCH_ERRORS as exc:
+        typer.secho(f"could not crawl seed: {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    for child_url, reason in summary.failures:
+        typer.secho(f"  ✗ {child_url}: {reason}", fg=typer.colors.YELLOW)
+    for path in summary.child_paths:
+        typer.secho(f"  ✓ {path.name}", fg=typer.colors.GREEN)
+    if summary.hub_path is not None:
+        typer.secho(f"Hub: {summary.hub_path}", fg=typer.colors.CYAN)
+    typer.secho(
+        f"Done: {len(summary.child_paths)} child note(s) under '{summary.hub_title}'.",
+        fg=typer.colors.CYAN,
+    )
+    _maybe_index(pipeline, rebuild_index)
+    if summary.written == 0:
         raise typer.Exit(code=1)
 
 

@@ -37,12 +37,29 @@ class Pipeline:
         return self.exporter.export(record)
 
     async def run(self, url: str, task: str, *, force_dynamic: bool = False) -> ScrapeRecord:
-        parser = get_parser(task)  # validates task early
+        get_parser(task)  # validates task early
 
         if not await self.robots.allowed(url):
             raise ScrapeError(f"disallowed by robots.txt: {url}")
 
         result = await self._fetch(url, force_dynamic=force_dynamic)
+        _, record = await self.extract(url, result, task, force_dynamic=force_dynamic)
+        if record is None:
+            raise ScrapeError(f"no data extracted for task={task!r} at {url}")
+        return record
+
+    async def extract(
+        self, url: str, result: FetchResult, task: str, *, force_dynamic: bool = False
+    ) -> tuple[FetchResult, ScrapeRecord | None]:
+        """Parse an already-fetched page into a record (or None), never raising.
+
+        Runs the same rule-parse -> dynamic-escalation -> llm_fallback ladder as
+        ``run``, but returns ``None`` instead of raising when nothing extracts, so
+        callers (the crawler) can keep going on a page that yields no note. Returns
+        the (possibly re-fetched, dynamic) ``FetchResult`` alongside the record so
+        the caller can harvest links from the same HTML the parser saw.
+        """
+        parser = get_parser(task)
         record = parser.parse(result)
 
         # Escalate to the dynamic fetcher when a static page looks JS-rendered.
@@ -59,9 +76,7 @@ class Pipeline:
         if record is None:
             log.info("rule parse empty; trying llm_fallback task=%s", task)
             record = await parser.llm_fallback(result, self.extractor)
-        if record is None:
-            raise ScrapeError(f"no data extracted for task={task!r} at {url}")
-        return record
+        return result, record
 
     async def _fetch(self, url: str, *, force_dynamic: bool) -> FetchResult:
         fetcher = select_fetcher(self.settings, force_dynamic=force_dynamic)

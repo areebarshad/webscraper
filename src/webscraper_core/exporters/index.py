@@ -22,6 +22,7 @@ def build_index(settings: Settings) -> Path:
     """(Re)generate the vault index note and return its path."""
     vault = settings.vault_path
     categories = [
+        ("Hubs", settings.hub_dir),
         ("Articles", settings.articles_dir),
         ("Contacts", settings.contacts_dir),
         ("Profiles", settings.profiles_dir),

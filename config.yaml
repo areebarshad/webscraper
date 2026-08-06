@@ -8,12 +8,19 @@ contacts_dir: "Contacts"
 articles_dir: "Articles"
 profiles_dir: "Profiles"
 research_dir: "Research"
+hub_dir: "Hubs"           # crawl seed pages become map-of-content hub notes here
 
 # Overwrite existing notes, or write a unique " (2)" suffixed file on collision.
 overwrite_existing: false
 
 # Rebuild Index.md automatically after every scrape (turn off with --no-index).
 auto_index: true
+
+# Recursive `crawl` command defaults (override per-run with CLI flags).
+crawl:
+  default_depth: 1        # seed + N levels of discovered sub-links
+  max_pages: 20           # hard safety cap on pages scraped per crawl run
+  same_domain: true       # stay on the seed host unless --allow-external
 
 fetch:
   timeout: 20.0            # total request timeout (seconds)

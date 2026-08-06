@@ -45,6 +45,12 @@ class DynamicSettings(BaseModel):
     headless: bool = True
 
 
+class CrawlSettings(BaseModel):
+    default_depth: int = 1  # seed + N levels of discovered sub-links
+    max_pages: int = 20  # hard safety cap on pages scraped per crawl run
+    same_domain: bool = True  # stay on the seed host unless --allow-external
+
+
 class LLMSettings(BaseModel):
     enabled: bool = False
     model: str = "claude-sonnet-5"
@@ -84,6 +90,7 @@ class Settings(BaseSettings):
     articles_dir: str = "Articles"
     profiles_dir: str = "Profiles"
     research_dir: str = "Research"
+    hub_dir: str = "Hubs"
     overwrite_existing: bool = False
     auto_index: bool = True  # refresh Index.md after each scrape command
 
@@ -91,6 +98,7 @@ class Settings(BaseSettings):
     throttle: ThrottleSettings = Field(default_factory=ThrottleSettings)
     retry: RetrySettings = Field(default_factory=RetrySettings)
     dynamic: DynamicSettings = Field(default_factory=DynamicSettings)
+    crawl: CrawlSettings = Field(default_factory=CrawlSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
 
     @classmethod
