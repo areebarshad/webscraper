@@ -13,6 +13,7 @@ from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.registry import get_parser
 from webscraper_core.schemas.base import ScrapeRecord
 from webscraper_core.utils.logging import get_logger
+from webscraper_core.utils.robots import RobotsGate
 
 log = get_logger(__name__)
 
@@ -26,6 +27,7 @@ class Pipeline:
         self.settings = settings or load_settings()
         self.exporter = ObsidianExporter(self.settings)
         self.extractor = LLMExtractor(self.settings.llm)
+        self.robots = RobotsGate(self.settings.fetch.respect_robots)
 
     async def scrape_to_vault(
         self, url: str, task: str, *, force_dynamic: bool = False
@@ -36,6 +38,9 @@ class Pipeline:
 
     async def run(self, url: str, task: str, *, force_dynamic: bool = False) -> ScrapeRecord:
         parser = get_parser(task)  # validates task early
+
+        if not await self.robots.allowed(url):
+            raise ScrapeError(f"disallowed by robots.txt: {url}")
 
         result = await self._fetch(url, force_dynamic=force_dynamic)
         record = parser.parse(result)

@@ -34,6 +34,11 @@ def _patch_fetcher(monkeypatch: pytest.MonkeyPatch) -> None:
         return stub
 
     monkeypatch.setattr("webscraper_core.pipeline.select_fetcher", _select)
+    # Keep tests hermetic: never fetch robots.txt over the network.
+    async def _allowed(self, url):  # type: ignore[no-untyped-def]
+        return True
+
+    monkeypatch.setattr("webscraper_core.utils.robots.RobotsGate.allowed", _allowed)
 
 
 async def test_pipeline_returns_article_record() -> None:

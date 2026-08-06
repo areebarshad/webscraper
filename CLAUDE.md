@@ -11,6 +11,7 @@ paths run first and expensive ones run only on fallback:
 
 ```
 URL (+ task)
+  → robots     RobotsGate — skip if the site's robots.txt disallows the path
   → fetch      httpx (static)  →  Playwright (dynamic, on demand)
   → parse      selectolax / bs4 / trafilatura, chosen per task
        ↳ llm_fallback (Claude structured output) only if rules fail
@@ -18,6 +19,10 @@ URL (+ task)
   → export     Obsidian note (YAML frontmatter + body + [[wikilinks]])
   → vault/<Category>/<Title>.md
 ```
+
+`exporters/index.py` builds a separate `vault/Index.md` map-of-content linking
+every note by category; it's rebuilt on demand (`scraper index`) or after a write
+with `--index`.
 
 ## Golden rules — do not break these
 
@@ -36,21 +41,24 @@ URL (+ task)
    Anthropic API in tests — use a fake extractor (see `tests/test_llm.py`).
 5. **Git is the user's job.** Never run `git commit`/`push`/`merge`/`rebase`.
    Suggest the commands; the user runs them.
+6. **Stay a polite crawler.** `RobotsGate` (checked in `pipeline.run`) honors
+   `robots.txt` by default. Don't remove or bypass it; it's disabled only via
+   `SCRAPER_FETCH__RESPECT_ROBOTS=false`. Robots results are cached per host.
 
 ## Layout
 
 ```
 src/webscraper_core/
-  cli.py          Typer CLI: scrape, person, batch, tasks, version
+  cli.py          Typer CLI: scrape, person, batch, index, tasks, version
   config.py       pydantic-settings (config.yaml + SCRAPER_ env overrides)
-  pipeline.py     orchestrator: fetch → parse → llm_fallback → validate → export
+  pipeline.py     orchestrator: robots → fetch → parse → llm_fallback → validate → export
   fetchers/       base, static (httpx), dynamic (Playwright), router
   parsers/        base (+ llm_fallback hook), article, contact, profile,
                   research, registry
   schemas/        base, article, contact, profile, research, llm
-  exporters/      base, obsidian (frontmatter + body + sanitize + collisions)
+  exporters/      base, obsidian (note writing), index (vault map-of-content)
   llm/            anthropic_client (Claude structured-output extractor)
-  utils/          throttle, retry, useragent, sanitize, logging
+  utils/          throttle, retry, useragent, sanitize, robots, logging
 ```
 
 ## Categories → vault folders
@@ -98,6 +106,8 @@ uv run scraper tasks
 uv run scraper scrape "<url>" --task article --no-write   # preview, no write
 uv run scraper person "<faculty-url>"                     # contact + research
 uv run scraper batch "<url1>" "<url2>" --task contact     # or --file urls.txt
+uv run scraper index                                      # (re)build vault Index.md
+# shared flags: --overwrite (replace note), --index (rebuild index after write)
 ```
 
 Use `--vault <path>` (or `SCRAPER_VAULT_PATH`) to write somewhere other than

@@ -27,8 +27,11 @@ visits.
   if you turn it on.
 - **🌐 Handles modern sites.** Static pages are fetched fast; JavaScript‑heavy
   pages are rendered in a real browser automatically when needed.
-- **🤝 A polite guest.** Rotates browser identities, spaces out requests per site,
-  and retries gently — so it behaves like a considerate visitor, not a hammer.
+- **🗺️ One hub for everything.** Build an `Index.md` that links every note by
+  category — a single map-of-content to navigate your whole collection.
+- **🤝 A polite guest.** Obeys each site's `robots.txt`, rotates browser
+  identities, spaces out requests per site, and retries gently — so it behaves
+  like a considerate visitor, not a hammer.
 - **🔒 Yours, locally.** Your notes stay in your vault on your computer. Nothing is
   uploaded anywhere unless you explicitly enable the AI fallback.
 
@@ -96,12 +99,30 @@ uv run scraper batch --file urls.txt --task contact
 It runs them in parallel (politely), writes a note for each success, and tells
 you which ones didn't pan out — one bad link never stops the rest.
 
+Handy flags on `scrape`, `person`, and `batch`: `--overwrite` (replace an existing
+note instead of making a numbered copy) and `--index` (refresh the vault index
+right after writing).
+
 See everything it can do:
 
 ```bash
 uv run scraper tasks       # list the scrape types: article, contact, profile, research
 uv run scraper --help      # full command reference
 ```
+
+---
+
+## One map for your whole vault 🗺️
+
+As your collection grows, build a single index note that links everything:
+
+```bash
+uv run scraper index
+```
+
+This writes `Index.md` at the top of your vault with a section per category —
+Articles, Contacts, Profiles, Research — each listing its notes as clickable
+`[[links]]`. Open it in Obsidian and every scrape is one hop away.
 
 ---
 
@@ -153,10 +174,13 @@ SCRAPER_LLM__ENABLED=true             # turn on the AI fallback
 
 ## Please scrape responsibly
 
-This tool is for gathering information you're allowed to access. Respect each
-site's terms of service and `robots.txt`, don't hammer servers, and don't collect
-personal data you have no right to. The built‑in rate limiting is there to help
-you be a good citizen — please keep it that way.
+This tool is for gathering information you're allowed to access. It **honors
+`robots.txt` by default** — if a site asks crawlers to stay out of a path, the
+scraper won't fetch it. Beyond that: respect each site's terms of service, don't
+hammer servers, and don't collect personal data you have no right to. The
+built‑in rate limiting and `robots.txt` checks are there to help you be a good
+citizen — please keep them on. (You can disable the robots check with
+`SCRAPER_FETCH__RESPECT_ROBOTS=false`, but think twice before you do.)
 
 ---
 
