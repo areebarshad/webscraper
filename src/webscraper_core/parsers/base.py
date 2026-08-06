@@ -1,7 +1,7 @@
 """Parser abstraction with an LLM fallback hook.
 
 Each concrete parser declares:
-  * ``task``   — registry key selecting it (e.g. "article", "contact").
+  * ``task``   — registry key selecting it (e.g. "contact", "profile").
   * ``engine`` — which HTML backend it uses; the router/parser reads accordingly.
 
 ``parse`` returns a validated ScrapeRecord, or ``None`` when it cannot extract

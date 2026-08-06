@@ -11,7 +11,6 @@ linked into your graph.
 
 ## Folders
 
-- 📰 **[[Articles]]** — news and articles: title, author, date, clean body.
 - 👤 **[[Contacts]]** — a person's contact info: emails, phones, company, socials.
 - 🧑‍💼 **[[Profiles]]** — public profiles: name, headline, bio, location.
 - 🔬 **[[Research]]** — a person's publications, each linking to its source.
@@ -32,7 +31,7 @@ click from the other.
 From the project root:
 
 ```bash
-uv run scraper scrape "<url>" --task article    # one page
+uv run scraper scrape "<url>" --task contact    # one page
 uv run scraper person "<faculty-url>"           # contact + research
 uv run scraper batch --file urls.txt --task contact
 uv run scraper index                            # refresh [[Index]]

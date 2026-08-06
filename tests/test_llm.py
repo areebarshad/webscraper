@@ -7,14 +7,11 @@ from pydantic import BaseModel
 from webscraper_core.config import LLMSettings
 from webscraper_core.fetchers.base import FetchResult
 from webscraper_core.llm.anthropic_client import LLMExtractor
-from webscraper_core.parsers.article import ArticleParser
 from webscraper_core.parsers.contact import ContactParser
 from webscraper_core.parsers.profile import ProfileParser
 from webscraper_core.parsers.research import ResearchParser
-from webscraper_core.schemas.article import ArticleNote
 from webscraper_core.schemas.contact import ContactNote
 from webscraper_core.schemas.llm import (
-    LLMArticle,
     LLMContact,
     LLMProfile,
     LLMResearch,
@@ -46,7 +43,7 @@ class _FakeExtractor:
 async def test_extractor_disabled_returns_none() -> None:
     extractor = LLMExtractor(LLMSettings(enabled=False))
     assert extractor.enabled is False
-    assert await extractor.extract(_res(), LLMArticle, "x") is None
+    assert await extractor.extract(_res(), LLMContact, "x") is None
 
 
 async def test_extractor_skips_short_pages_without_calling_api(
@@ -61,25 +58,8 @@ async def test_extractor_skips_short_pages_without_calling_api(
         url="https://x.com", final_url="https://x.com", status=200,
         html="<html><body><div id='app'></div><p>Loading...</p></body></html>",
     )
-    assert await extractor.extract(tiny, LLMArticle, "x") is None
+    assert await extractor.extract(tiny, LLMContact, "x") is None
     assert extractor._client is None  # never built -> no network, no cost
-
-
-async def test_article_llm_fallback_maps_note() -> None:
-    fake = _FakeExtractor(
-        {LLMArticle: LLMArticle(title="Deep Dive", author="Ann", published="2026-01-02",
-                                content="Body " * 60)}
-    )
-    note = await ArticleParser().llm_fallback(_res(), fake)  # type: ignore[arg-type]
-    assert isinstance(note, ArticleNote)
-    assert note.title_text == "Deep Dive"
-    assert note.author == "Ann"
-    assert note.published is not None and note.published.year == 2026
-
-
-async def test_article_llm_fallback_empty_content_returns_none() -> None:
-    fake = _FakeExtractor({LLMArticle: LLMArticle(title="X", content="   ")})
-    assert await ArticleParser().llm_fallback(_res(), fake) is None  # type: ignore[arg-type]
 
 
 async def test_contact_llm_fallback_maps_socials() -> None:
@@ -130,4 +110,4 @@ async def test_research_llm_fallback_no_items_returns_none() -> None:
 
 async def test_llm_fallback_returns_none_when_extractor_yields_nothing() -> None:
     fake = _FakeExtractor({})  # extract() returns None for every schema
-    assert await ArticleParser().llm_fallback(_res(), fake) is None  # type: ignore[arg-type]
+    assert await ContactParser().llm_fallback(_res(), fake) is None  # type: ignore[arg-type]

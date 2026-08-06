@@ -25,14 +25,13 @@ All commands are run as `uv run scraper <command>`.
 
 ---
 
-## 2. The four scrape tasks
+## 2. The three scrape tasks
 
 Every scrape needs a task (`--task`/`-t`) that decides how the page is parsed and
 where the note lands.
 
 | Task       | Use it for                              | Folder       | Extracts |
 |------------|-----------------------------------------|--------------|----------|
-| `article`  | News stories, blog posts                | `Articles/`  | Title, author, date, clean body |
 | `contact`  | A person's contact page / team bio      | `Contacts/`  | Emails, phones, company, socials |
 | `profile`  | A public profile page                   | `Profiles/`  | Name, headline, bio, location |
 | `research` | A researcher's publication list         | `Research/`  | Publications, each with a source link |
@@ -48,13 +47,13 @@ task you pass — or use the `person` command to get both at once (Section 4).
 ## 3. Scrape a single page
 
 ```bash
-uv run scraper scrape "<url>" --task article
+uv run scraper scrape "<url>" --task contact
 ```
 
 **Preview before writing** — inspect the parsed note without touching the vault:
 
 ```bash
-uv run scraper scrape "<url>" --task article --no-write
+uv run scraper scrape "<url>" --task contact --no-write
 ```
 
 Use `--no-write` first whenever you are unsure a page will parse well. It runs the
@@ -87,7 +86,7 @@ Same task, many URLs — inline or from a file (one URL per line):
 
 ```bash
 uv run scraper batch "<url1>" "<url2>" --task contact
-uv run scraper batch --file urls.txt --task article
+uv run scraper batch --file urls.txt --task contact
 ```
 
 - Runs in parallel, politely. Tune with `-c/--concurrency` (default `5`).
@@ -114,7 +113,7 @@ What you get out of one run:
 - A **hub note** in `Hubs/<Seed Title>.md` — a map-of-content that lists every
   child it harvested as a `[[wikilink]]`.
 - One **child note** per discovered page, filed in its normal category folder
-  (`Contacts/`, `Articles/`, `Profiles/`, ...). Every child gets a
+  (`Contacts/`, `Profiles/`, `Research/`, ...). Every child gets a
   `parent: "[[Seed Title]]"` frontmatter key and a "Part of [[Seed Title]]"
   backlink, so the hub and its children form a connected cluster in Obsidian's
   graph.
@@ -125,8 +124,8 @@ How it decides what to follow and scrape:
   sidebars, `mailto:`/`tel:` links, on-page `#anchors`, and (by default) other
   domains are all ignored — you get the page's real subjects, not its chrome.
 - **`--task auto`** (the default) classifies each child page on its own: a page
-  with a contact email becomes a `contact`, a long-form page becomes an `article`,
-  and so on. Pass `--task contact` (or any task) to force one type for every child.
+  with a contact email becomes a `contact`, and other pages fall back to a
+  `profile`. Pass `--task contact` (or any task) to force one type for every child.
 
 Crawl-specific flags:
 
@@ -191,7 +190,6 @@ islands:
 - Contacts, profiles, and research link their **company/institution** as `[[Org]]`,
   so colleagues at the same place share a hub. A bare domain (e.g. `example.com`)
   is left as plain text to avoid a junk hub node.
-- **Articles** link their `[[Author]]`, grouping everything that author wrote.
 - A **crawl** hub note links to every child it harvested, and each child links
   back with a `parent` key and a backlink — the whole crawl becomes one cluster.
 
@@ -203,7 +201,7 @@ By default, notes go to the bundled `webscraper/` vault (already set up with the
 category folders, a Welcome note, and a live Index). To use your own vault:
 
 ```bash
-uv run scraper scrape "<url>" --task article --vault /path/to/YourVault
+uv run scraper scrape "<url>" --task contact --vault /path/to/YourVault
 ```
 
 Or set it permanently in `config.yaml`:
@@ -290,11 +288,11 @@ Keys you will actually touch:
 ```bash
 uv run scraper tasks                                   # list task types
 uv run scraper version                                 # installed version
-uv run scraper scrape "<url>" -t article               # one page → note
-uv run scraper scrape "<url>" -t article --no-write    # preview only
+uv run scraper scrape "<url>" -t contact               # one page → note
+uv run scraper scrape "<url>" -t contact --no-write    # preview only
 uv run scraper person "<url>"                          # contact + research
 uv run scraper batch "<u1>" "<u2>" -t contact          # many pages
-uv run scraper batch --file urls.txt -t article        # from a file
+uv run scraper batch --file urls.txt -t contact        # from a file
 uv run scraper crawl "<seed>"                          # recursive crawl (depth 1)
 uv run scraper crawl "<seed>" --depth 2 --max-pages 40 # deeper, higher cap
 uv run scraper index                                   # rebuild Index.md

@@ -2,10 +2,10 @@
 
 **Turn any web page into a clean, organized note in your Obsidian vault — in one command.**
 
-Point it at a news article, a company team page, or a professor's faculty
-profile, and it pulls out what matters, tidies it into Markdown with proper tags
-and links, and files it in the right folder of your vault. No copy‑paste, no
-messy formatting, no dead ends when a site is built with heavy JavaScript.
+Point it at a company team page or a professor's faculty profile, and it pulls
+out what matters, tidies it into Markdown with proper tags and links, and files
+it in the right folder of your vault. No copy‑paste, no messy formatting, no dead
+ends when a site is built with heavy JavaScript.
 
 It's open source, runs entirely on your machine, and is friendly to the sites it
 visits.
@@ -16,9 +16,8 @@ visits.
 
 - **📥 Straight into Obsidian.** Every result is a real `.md` note with YAML
   frontmatter, tags, and `[[wikilinks]]` — it shows up in your graph immediately.
-- **🗂️ Sorts itself.** Articles go in `Articles/`, people in `Contacts/`,
-  profiles in `Profiles/`, and research in `Research/`. You don't organize
-  anything.
+- **🗂️ Sorts itself.** People go in `Contacts/`, profiles in `Profiles/`, and
+  research in `Research/`. You don't organize anything.
 - **👤 Knows people.** Scrape a professor once and get **two** linked notes: their
   contact details *and* a list of their publications, each with a link back to
   where it was found.
@@ -38,8 +37,8 @@ visits.
   category and **refreshes itself after every scrape** — never stale, never
   hand-maintained.
 - **🔗 A graph that connects.** A person's publications link to their contact
-  note, colleagues share a company/institution hub, and article authors become
-  hubs — so Obsidian's graph view is actually meaningful, not a scatter of islands.
+  note, and colleagues share a company/institution hub — so Obsidian's graph view
+  is actually meaningful, not a scatter of islands.
 - **🤝 A polite guest.** Obeys each site's `robots.txt`, rotates browser
   identities, spaces out requests per site, and retries gently — so it behaves
   like a considerate visitor, not a hammer.
@@ -60,18 +59,15 @@ uv sync --extra dev            # install everything
 Then scrape something:
 
 ```bash
-# Save a news article as a note
-uv run scraper scrape "https://example.com/some-article" --task article
-
 # Grab someone's contact details
 uv run scraper scrape "https://example.com/team/jane" --task contact
 
 # Peek at the note first without saving it
-uv run scraper scrape "https://example.com/some-article" --task article --no-write
+uv run scraper scrape "https://example.com/team/jane" --task contact --no-write
 ```
 
 Your notes appear inside the bundled Obsidian vault at `webscraper/` — already set
-up with `Articles/`, `Contacts/`, `Profiles/`, and `Research/` folders, a
+up with `Contacts/`, `Profiles/`, and `Research/` folders, a
 **Welcome** note, and a live **Index**. Open that folder as a vault in Obsidian
 and everything is there. Want to use your **own** vault instead? Add
 `--vault /path/to/YourVault` to any command, or set `vault_path` in `config.yaml`
@@ -104,7 +100,7 @@ Have a page full of links, or a file of URLs? Do them all in one go:
 
 ```bash
 # Several URLs
-uv run scraper batch "https://a.com" "https://b.com" --task article
+uv run scraper batch "https://a.com" "https://b.com" --task contact
 
 # Or from a file (one URL per line)
 uv run scraper batch --file urls.txt --task contact
@@ -120,7 +116,7 @@ right after writing).
 See everything it can do:
 
 ```bash
-uv run scraper tasks       # list the scrape types: article, contact, profile, research
+uv run scraper tasks       # list the scrape types: contact, profile, research
 uv run scraper --help      # full command reference
 ```
 
@@ -169,7 +165,7 @@ same page twice in a run.
 ## One map for your whole vault 🗺️
 
 Every scrape **automatically refreshes** `Index.md` at the top of your vault — a
-section per category (Hubs, Articles, Contacts, Profiles, Research) listing every
+section per category (Hubs, Contacts, Profiles, Research) listing every
 note as a clickable `[[link]]`. Open it in Obsidian and everything is one hop away;
 you never have to maintain it.
 
@@ -186,7 +182,6 @@ useful:
   note, so their details and their publications sit together in the graph.
 - Everyone at the same **company or institution** links to a shared hub note, so
   colleagues cluster together.
-- Article **authors** become hubs too, grouping everything they wrote.
 
 ---
 

@@ -32,8 +32,8 @@ on demand via `scraper index`.
   node for non-person / research-less contacts.
 - Contact/profile/research link their company/affiliation as `[[Org]]` (a shared
   hub) — but a bare domain affiliation is left plain to avoid a junk hub node.
-- Articles link `[[Author]]`. When adding a note type, wire it into an existing
-  hub (person, org, or author) rather than leaving it an island.
+- When adding a note type, wire it into an existing hub (person or org) rather
+  than leaving it an island.
 
 ## Golden rules — do not break these
 
@@ -68,9 +68,9 @@ src/webscraper_core/
   config.py       pydantic-settings (config.yaml + SCRAPER_ env overrides)
   pipeline.py     orchestrator: robots → fetch → parse → llm_fallback → validate → export
   fetchers/       base, static (httpx), dynamic (Playwright), router
-  parsers/        base (+ llm_fallback hook), article, contact, profile,
+  parsers/        base (+ llm_fallback hook), contact, profile,
                   research, registry
-  schemas/        base, article, contact, profile, research, llm
+  schemas/        base, contact, profile, research, llm
   exporters/      base, obsidian (note writing), index (vault map-of-content)
   llm/            anthropic_client (Claude structured-output extractor)
   utils/          throttle, retry, useragent, sanitize, robots, htmlclean, logging
@@ -86,7 +86,6 @@ input tokens by ~80–90%.
 
 | Task       | Note type | Folder        | Holds |
 |------------|-----------|---------------|-------|
-| `article`  | article   | `Articles/`   | News/articles: title, author, date, clean body |
 | `contact`  | contact   | `Contacts/`   | A person's contact info: emails, phones, company, socials |
 | `profile`  | profile   | `Profiles/`   | A public profile: name, headline, bio, location |
 | `research` | research  | `Research/`   | A person's publications, each with a source link |
@@ -124,7 +123,7 @@ uv run ruff check
 uv run mypy src
 
 uv run scraper tasks
-uv run scraper scrape "<url>" --task article --no-write   # preview, no write
+uv run scraper scrape "<url>" --task contact --no-write   # preview, no write
 uv run scraper person "<faculty-url>"                     # contact + research
 uv run scraper batch "<url1>" "<url2>" --task contact     # or --file urls.txt
 uv run scraper index                                      # (re)build vault Index.md

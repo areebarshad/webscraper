@@ -14,14 +14,14 @@ def _utcnow() -> datetime:
 class ScrapeRecord(BaseModel):
     """Common fields every exportable record carries.
 
-    Subclasses (ArticleNote, ContactNote, ...) add task-specific fields and set
+    Subclasses (ContactNote, ProfileNote, ...) add task-specific fields and set
     ``note_kind``. The exporter relies only on this base plus each subclass's
     ``title()`` / ``frontmatter()`` / ``body()`` contract.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    note_kind: str  # e.g. "article", "contact"; also drives the vault subdir
+    note_kind: str  # e.g. "contact", "profile"; also drives the vault subdir
     source_url: str
     scraped_at: datetime = Field(default_factory=_utcnow)
 

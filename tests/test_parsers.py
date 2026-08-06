@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from webscraper_core.fetchers.base import FetchResult
-from webscraper_core.parsers.article import ArticleParser
 from webscraper_core.parsers.contact import ContactParser
 from webscraper_core.parsers.profile import ProfileParser
 from webscraper_core.parsers.registry import available_tasks, get_parser
@@ -11,8 +10,8 @@ from webscraper_core.parsers.research import ResearchParser
 
 
 def test_registry_tasks() -> None:
-    assert available_tasks() == ["article", "contact", "profile", "research"]
-    assert isinstance(get_parser("article"), ArticleParser)
+    assert available_tasks() == ["contact", "profile", "research"]
+    assert isinstance(get_parser("contact"), ContactParser)
 
 
 def test_registry_unknown_task() -> None:
@@ -22,21 +21,6 @@ def test_registry_unknown_task() -> None:
         assert "nope" in str(exc)
     else:  # pragma: no cover
         raise AssertionError("expected KeyError")
-
-
-def test_article_parse(article_result: FetchResult) -> None:
-    note = ArticleParser().parse(article_result)
-    assert note is not None
-    assert "Bakery" in note.title_text
-    assert note.author == "John Writer"
-    assert note.published is not None and note.published.year == 2026
-    assert note.site == "news.example.com"
-    assert len(note.content) > 200
-    assert "[[John Writer]]" in note.body()
-
-
-def test_article_parse_empty_returns_none(empty_result: FetchResult) -> None:
-    assert ArticleParser().parse(empty_result) is None
 
 
 def test_contact_parse(contact_result: FetchResult) -> None:

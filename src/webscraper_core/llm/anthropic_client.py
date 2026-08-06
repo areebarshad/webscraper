@@ -33,7 +33,7 @@ _MAX_TEXT_CHARS = 12_000
 def readable_text(res: FetchResult) -> str:
     """Clean, noise-free page text for the model — never raw HTML.
 
-    trafilatura's article extraction first (strips boilerplate); if it finds
+    trafilatura's main-content extraction first (strips boilerplate); if it finds
     nothing, fall back to visible text with scripts/nav/footer/forms stripped.
     Either way the model never sees markup, scripts, or chrome.
     """

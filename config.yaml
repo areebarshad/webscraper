@@ -5,7 +5,6 @@
 # (it contains the .obsidian config). Point this at your own vault to use it.
 vault_path: "webscraper"
 contacts_dir: "Contacts"
-articles_dir: "Articles"
 profiles_dir: "Profiles"
 research_dir: "Research"
 hub_dir: "Hubs"           # crawl seed pages become map-of-content hub notes here

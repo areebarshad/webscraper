@@ -10,15 +10,6 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
-class LLMArticle(BaseModel):
-    title: str = Field(description="The article headline.")
-    author: str | None = Field(default=None, description="Author name, if stated.")
-    published: str | None = Field(
-        default=None, description="Publication date as ISO 8601 (YYYY-MM-DD), if stated."
-    )
-    content: str = Field(description="The clean article body text, as Markdown.")
-
-
 class LLMContact(BaseModel):
     name: str = Field(description="The person's full name.")
     emails: list[str] = Field(default_factory=list, description="Email addresses.")

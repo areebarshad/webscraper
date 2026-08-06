@@ -44,7 +44,6 @@ class ObsidianExporter(BaseExporter):
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self._subdirs = {
-            "article": settings.articles_dir,
             "contact": settings.contacts_dir,
             "profile": settings.profiles_dir,
             "research": settings.research_dir,

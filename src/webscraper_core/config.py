@@ -87,7 +87,6 @@ class Settings(BaseSettings):
 
     vault_path: Path = Path("webscraper")  # the bundled Obsidian vault
     contacts_dir: str = "Contacts"
-    articles_dir: str = "Articles"
     profiles_dir: str = "Profiles"
     research_dir: str = "Research"
     hub_dir: str = "Hubs"
@@ -122,10 +121,6 @@ class Settings(BaseSettings):
     @property
     def contacts_path(self) -> Path:
         return self.vault_path / self.contacts_dir
-
-    @property
-    def articles_path(self) -> Path:
-        return self.vault_path / self.articles_dir
 
 
 def load_settings() -> Settings:

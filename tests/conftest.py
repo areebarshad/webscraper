@@ -17,11 +17,6 @@ def load_fixture(name: str, url: str) -> FetchResult:
 
 
 @pytest.fixture
-def article_result() -> FetchResult:
-    return load_fixture("article.html", "https://news.example.com/bakery-award")
-
-
-@pytest.fixture
 def contact_result() -> FetchResult:
     return load_fixture("contact.html", "https://acme.com/team/jane")
 

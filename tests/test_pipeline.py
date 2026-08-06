@@ -9,7 +9,7 @@ import pytest
 from webscraper_core.config import Settings
 from webscraper_core.fetchers.base import BaseFetcher, FetchResult
 from webscraper_core.pipeline import Pipeline, ScrapeError
-from webscraper_core.schemas.article import ArticleNote
+from webscraper_core.schemas.contact import ContactNote
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -28,7 +28,7 @@ class _StubFetcher(BaseFetcher):
 
 @pytest.fixture(autouse=True)
 def _patch_fetcher(monkeypatch: pytest.MonkeyPatch) -> None:
-    stub = _StubFetcher((FIXTURES / "article.html").read_text(encoding="utf-8"))
+    stub = _StubFetcher((FIXTURES / "contact.html").read_text(encoding="utf-8"))
 
     def _select(settings: Settings, *, force_dynamic: bool = False) -> BaseFetcher:
         return stub
@@ -41,10 +41,10 @@ def _patch_fetcher(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("webscraper_core.utils.robots.RobotsGate.allowed", _allowed)
 
 
-async def test_pipeline_returns_article_record() -> None:
-    record = await Pipeline(Settings()).run("https://news.example.com/x", "article")
-    assert isinstance(record, ArticleNote)
-    assert "Bakery" in record.title()
+async def test_pipeline_returns_contact_record() -> None:
+    record = await Pipeline(Settings()).run("https://acme.com/team/jane", "contact")
+    assert isinstance(record, ContactNote)
+    assert "Jane Doe" in record.title()
 
 
 async def test_pipeline_raises_on_empty(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -54,7 +54,7 @@ async def test_pipeline_raises_on_empty(monkeypatch: pytest.MonkeyPatch) -> None
         lambda settings, *, force_dynamic=False: empty,
     )
     with pytest.raises(ScrapeError):
-        await Pipeline(Settings()).run("https://spa.example.com", "article")
+        await Pipeline(Settings()).run("https://spa.example.com", "contact")
 
 
 async def test_pipeline_unknown_task_raises() -> None:

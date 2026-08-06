@@ -20,8 +20,8 @@ def _split_frontmatter(text: str) -> dict[str, object]:
 
 
 def test_index_lists_notes_by_category(tmp_path: Path) -> None:
-    (tmp_path / "Articles").mkdir()
-    (tmp_path / "Articles" / "Some Story.md").write_text("x", encoding="utf-8")
+    (tmp_path / "Contacts").mkdir()
+    (tmp_path / "Contacts" / "Jane Doe.md").write_text("x", encoding="utf-8")
     (tmp_path / "Research").mkdir()
     (tmp_path / "Research" / "Alan Turing - Research.md").write_text("x", encoding="utf-8")
 
@@ -32,8 +32,8 @@ def test_index_lists_notes_by_category(tmp_path: Path) -> None:
     fm = _split_frontmatter(text)
     assert fm["type"] == "index"
     assert fm["note_count"] == 2
-    assert "## Articles (1)" in text
-    assert "[[Some Story]]" in text
+    assert "## Contacts (1)" in text
+    assert "[[Jane Doe]]" in text
     assert "[[Alan Turing - Research]]" in text
 
 
@@ -44,8 +44,8 @@ def test_index_on_empty_vault(tmp_path: Path) -> None:
 
 
 def test_index_excludes_itself(tmp_path: Path) -> None:
-    (tmp_path / "Articles").mkdir()
-    (tmp_path / "Articles" / "A.md").write_text("x", encoding="utf-8")
+    (tmp_path / "Contacts").mkdir()
+    (tmp_path / "Contacts" / "A.md").write_text("x", encoding="utf-8")
     build_index(_settings(tmp_path))
     # A second build must not list the Index.md it just wrote at vault root.
     text = build_index(_settings(tmp_path)).read_text(encoding="utf-8")

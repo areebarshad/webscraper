@@ -23,7 +23,6 @@ def build_index(settings: Settings) -> Path:
     vault = settings.vault_path
     categories = [
         ("Hubs", settings.hub_dir),
-        ("Articles", settings.articles_dir),
         ("Contacts", settings.contacts_dir),
         ("Profiles", settings.profiles_dir),
         ("Research", settings.research_dir),
