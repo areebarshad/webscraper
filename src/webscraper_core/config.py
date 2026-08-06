@@ -116,5 +116,12 @@ class Settings(BaseSettings):
 
 
 def load_settings() -> Settings:
-    """Build a Settings instance from config.yaml + environment."""
+    """Build a Settings instance from config.yaml + environment.
+
+    Loads .env into the process environment first so downstream SDKs (e.g. the
+    Anthropic client reading ANTHROPIC_API_KEY) see the same values.
+    """
+    from dotenv import load_dotenv
+
+    load_dotenv()
     return Settings()

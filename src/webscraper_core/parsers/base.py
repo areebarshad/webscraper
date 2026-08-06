@@ -11,10 +11,13 @@ confidently. The pipeline then calls ``llm_fallback`` (a no-op until Phase 5).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import ClassVar, Literal
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from webscraper_core.fetchers.base import FetchResult
 from webscraper_core.schemas.base import ScrapeRecord
+
+if TYPE_CHECKING:
+    from webscraper_core.llm.anthropic_client import LLMExtractor
 
 Engine = Literal["selectolax", "bs4", "trafilatura"]
 
@@ -27,9 +30,12 @@ class BaseParser(ABC):
     def parse(self, res: FetchResult) -> ScrapeRecord | None:
         """Extract a record from HTML, or return None on low confidence."""
 
-    def llm_fallback(self, res: FetchResult) -> ScrapeRecord | None:
+    async def llm_fallback(
+        self, res: FetchResult, extractor: LLMExtractor
+    ) -> ScrapeRecord | None:
         """Structured extraction via Claude when rule-based parse fails.
 
-        Default no-op; Phase 5 wires the Anthropic client here.
+        Default no-op; subclasses that support it call ``extractor.extract``
+        with a task-specific schema and map the result onto a note.
         """
         return None

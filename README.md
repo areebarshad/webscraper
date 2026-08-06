@@ -58,6 +58,7 @@ uv run mypy src
 
 ## Status
 
-Phases 1–4 are in place: skeleton/config/utilities, static fetching, article /
-contact / profile parsers, the Obsidian exporter, and dynamic Playwright
-fetching with static→dynamic escalation. The Claude LLM fallback lands in Phase 5.
+All five phases are in place: skeleton/config/utilities, static fetching, article
+/ contact / profile parsers, the Obsidian exporter, dynamic Playwright fetching
+with static→dynamic escalation, and the Claude structured-output LLM fallback
+(opt-in via `SCRAPER_LLM__ENABLED=true` + `ANTHROPIC_API_KEY`).

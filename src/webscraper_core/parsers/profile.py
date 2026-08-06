@@ -13,8 +13,10 @@ from urllib.parse import urlsplit
 from selectolax.parser import HTMLParser
 
 from webscraper_core.fetchers.base import FetchResult
+from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.parsers.contact import _EMAIL, _SOCIAL_HOSTS, _dedup
+from webscraper_core.schemas.llm import LLMProfile
 from webscraper_core.schemas.profile import ProfileNote
 
 
@@ -75,6 +77,29 @@ class ProfileParser(BaseParser):
             company=company,
             emails=emails,
             socials=socials,
+        )
+
+    async def llm_fallback(
+        self, res: FetchResult, extractor: LLMExtractor
+    ) -> ProfileNote | None:
+        result = await extractor.extract(
+            res,
+            LLMProfile,
+            "Extract the public profile on this page: name, headline/role, bio, "
+            "location, company, and any email addresses.",
+        )
+        if result is None or not result.name.strip():
+            return None
+        if not (result.headline or result.bio or result.emails):
+            return None
+        return ProfileNote(
+            source_url=res.final_url,
+            name=result.name,
+            headline=result.headline,
+            bio=result.bio,
+            location=result.location,
+            company=result.company,
+            emails=result.emails,
         )
 
     @staticmethod

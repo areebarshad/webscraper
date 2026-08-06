@@ -9,8 +9,10 @@ from urllib.parse import urlsplit
 from selectolax.parser import HTMLParser
 
 from webscraper_core.fetchers.base import FetchResult
+from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.schemas.contact import ContactNote
+from webscraper_core.schemas.llm import LLMContact
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # Phones: optional +, groups of digits with spaces/dashes/parens/dots, 7-15 digits total.
@@ -65,6 +67,37 @@ class ContactParser(BaseParser):
             emails=emails,
             phones=phones,
             company=company,
+            socials=socials,
+        )
+
+    async def llm_fallback(
+        self, res: FetchResult, extractor: LLMExtractor
+    ) -> ContactNote | None:
+        result = await extractor.extract(
+            res,
+            LLMContact,
+            "Extract the contact / person described on this page: name, email "
+            "addresses, phone numbers, company, and social profile links.",
+        )
+        if result is None or not result.name.strip():
+            return None
+        socials = {
+            label: url
+            for label, url in (
+                ("linkedin", result.linkedin),
+                ("twitter", result.twitter),
+                ("github", result.github),
+            )
+            if url
+        }
+        if not (result.emails or result.phones or socials):
+            return None
+        return ContactNote(
+            source_url=res.final_url,
+            name=result.name,
+            emails=result.emails,
+            phones=result.phones,
+            company=result.company,
             socials=socials,
         )
 

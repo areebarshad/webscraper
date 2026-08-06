@@ -10,8 +10,10 @@ import trafilatura
 from selectolax.parser import HTMLParser
 
 from webscraper_core.fetchers.base import FetchResult
+from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.base import BaseParser
 from webscraper_core.schemas.article import ArticleNote
+from webscraper_core.schemas.llm import LLMArticle
 
 _MIN_CONTENT = 200  # chars; below this we treat extraction as failed
 
@@ -56,6 +58,26 @@ class ArticleParser(BaseParser):
             published=_parse_date(pub_raw),
             site=urlsplit(res.final_url).netloc or None,
             content=content,
+        )
+
+    async def llm_fallback(
+        self, res: FetchResult, extractor: LLMExtractor
+    ) -> ArticleNote | None:
+        result = await extractor.extract(
+            res,
+            LLMArticle,
+            "Extract the news article on this page: its headline, author, "
+            "publication date, and clean body text.",
+        )
+        if result is None or not result.content.strip() or not result.title.strip():
+            return None
+        return ArticleNote(
+            source_url=res.final_url,
+            title_text=result.title,
+            author=result.author or None,
+            published=_parse_date(result.published),
+            site=urlsplit(res.final_url).netloc or None,
+            content=result.content,
         )
 
     @staticmethod

@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import asyncio
 
+import httpx
 import typer
 
 from webscraper_core import __version__
 from webscraper_core.pipeline import Pipeline, ScrapeError
 from webscraper_core.utils.logging import setup_logging
+from webscraper_core.utils.retry import RetryableStatus
 
 app = typer.Typer(
     add_completion=False,
@@ -52,6 +54,9 @@ def scrape(
             typer.echo(render_note(record))
     except ScrapeError as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    except (httpx.HTTPError, RetryableStatus) as exc:
+        typer.secho(f"fetch failed: {exc}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from exc
     except (KeyError, NotImplementedError) as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)

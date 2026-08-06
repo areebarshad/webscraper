@@ -9,6 +9,7 @@ from webscraper_core.config import Settings, load_settings
 from webscraper_core.exporters.obsidian import ObsidianExporter
 from webscraper_core.fetchers.base import FetchResult
 from webscraper_core.fetchers.router import looks_js_rendered, select_fetcher
+from webscraper_core.llm.anthropic_client import LLMExtractor
 from webscraper_core.parsers.registry import get_parser
 from webscraper_core.schemas.base import ScrapeRecord
 from webscraper_core.utils.logging import get_logger
@@ -24,6 +25,7 @@ class Pipeline:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or load_settings()
         self.exporter = ObsidianExporter(self.settings)
+        self.extractor = LLMExtractor(self.settings.llm)
 
     async def scrape_to_vault(
         self, url: str, task: str, *, force_dynamic: bool = False
@@ -41,12 +43,17 @@ class Pipeline:
         # Escalate to the dynamic fetcher when a static page looks JS-rendered.
         if record is None and not force_dynamic and looks_js_rendered(result):
             log.info("static under-rendered; escalating to dynamic fetch task=%s", task)
-            result = await self._fetch(url, force_dynamic=True)
-            record = parser.parse(result)
+            try:
+                dynamic_result = await self._fetch(url, force_dynamic=True)
+            except ImportError:
+                log.warning("dynamic fetch unavailable (install the 'dynamic' extra); skipping")
+            else:
+                result = dynamic_result
+                record = parser.parse(result)
 
         if record is None:
             log.info("rule parse empty; trying llm_fallback task=%s", task)
-            record = parser.llm_fallback(result)
+            record = await parser.llm_fallback(result, self.extractor)
         if record is None:
             raise ScrapeError(f"no data extracted for task={task!r} at {url}")
         return record
